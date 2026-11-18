@@ -9,6 +9,7 @@ from qarniya.domain import CornealExam, CornealMaps, EyeSide, MapType
 from qarniya.evaluation import (
     bootstrap_confidence_intervals,
     compute_binary_metrics,
+    soft_vote,
     threshold_for_sensitivity,
 )
 from qarniya.evaluation.baseline import TabularBaseline
@@ -73,6 +74,21 @@ def test_bootstrap_by_patient_is_wider_than_by_eye() -> None:
     by_eye = bootstrap_confidence_intervals(y, p, [str(i) for i in range(len(y))], 0.5, 500)
     width = lambda ci: ci["sensitivity"].high - ci["sensitivity"].low  # noqa: E731
     assert width(by_patient) > width(by_eye)
+
+
+# ---------- fusion ----------
+def test_soft_vote_is_the_average_of_opinions() -> None:
+    images = np.array([0.99, 0.02, 0.90])
+    numbers = np.array([0.01, 0.98, 0.80])
+    assert soft_vote([images, numbers]) == pytest.approx([0.50, 0.50, 0.85])
+    assert soft_vote([images, numbers], weights=[3, 1]) == pytest.approx([0.745, 0.26, 0.875])
+
+
+def test_soft_vote_rejects_bad_weights() -> None:
+    with pytest.raises(ValueError):
+        soft_vote([np.array([0.5])], weights=[0.0])
+    with pytest.raises(ValueError):
+        soft_vote([])
 
 
 # ---------- baseline ----------

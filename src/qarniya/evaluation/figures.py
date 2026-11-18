@@ -25,7 +25,7 @@ SURFACE = "#fcfcfb"
 TEXT_PRIMARY = "#0b0b0b"
 TEXT_SECONDARY = "#52514e"
 GRID = "#e4e3df"
-SERIES = ("#2a78d6", "#eb6834")  # 1 : bleu, 2 : orange
+SERIES = ("#2a78d6", "#eb6834", "#1baf7a")  # 1 : bleu, 2 : orange, 3 : aqua (validés ensemble)
 SEQUENTIAL = LinearSegmentedColormap.from_list("qarniya_blue", ["#eef4fc", "#2a78d6", "#123a6b"])
 
 
@@ -60,7 +60,7 @@ def plot_roc(series: Sequence[RocSeries], path: Path, title: str) -> None:
         ax.annotate(
             f"{s.name} : sens. {s.metrics.sensitivity:.0%}, spéc. {s.metrics.specificity:.0%}",
             point,
-            xytext=(12, -14 if s is series[0] else -30),
+            xytext=(12, -14 - 16 * series.index(s)),
             textcoords="offset points",
             fontsize=8,
             color=TEXT_PRIMARY,

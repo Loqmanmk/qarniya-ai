@@ -29,8 +29,12 @@ def test_evaluation_writes_full_report(trained_run: Path) -> None:
     assert metrics["n_test_eyes"] == result.n_test == 4  # patients 10 et 11, deux yeux chacun
     assert metrics["protocol"]["threshold_chosen_on"] == "validation"
     assert metrics["protocol"]["bootstrap_unit"] == "patient"
-    assert result.baseline is None  # le mini-dataset n'a pas de Kmax : pas de baseline
-    assert "Qarniya" in (out / "report.md").read_text(encoding="utf-8")
+    # images, chiffres seuls (Kmax), puis fusion des deux : même protocole pour les trois
+    assert [e.key for e in result.evaluations] == ["images", "chiffres", "fusion"]
+    assert set(metrics["models"]) == {"images", "chiffres", "fusion"}
+    assert (out / "confusion_fusion_test.png").is_file()
+    report = (out / "report.md").read_text(encoding="utf-8")
+    assert "Fusion images + chiffres" in report and "aucun paramètre appris" in report
 
 
 def test_test_set_cannot_be_evaluated_twice_by_accident(trained_run: Path) -> None:

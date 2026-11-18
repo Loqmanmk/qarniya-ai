@@ -20,6 +20,7 @@ qarniya evaluate outputs/runs/20261118_195456_cornorb_resnet18
 |---|---|---|---|---|---|
 | **Qarniya AI (4 cartes)** | **0,996** [0,987–1,000] | **95,6 %** [90,9–98,9] | **99,4 %** [98,2–100] | **4** / 91 | **1** / 176 |
 | Chiffres seuls (Kmax, épaisseurs, astigmatisme, asphéricités) | 0,983 [0,957–0,999] | 94,5 % [89,3–98,8] | 97,7 % [94,6–100] | 5 / 91 | 4 / 176 |
+| Fusion images + chiffres (vote moyen, voir § 4) | 1,000 [0,998–1,000] | 94,5 % [89,4–98,8] | 99,4 % [98,2–100] | 5 / 91 | 1 / 176 |
 
 ![Courbe ROC](figures/roc_test.png) ![Matrice de confusion](figures/confusion_test.png)
 
@@ -43,8 +44,7 @@ qarniya evaluate outputs/runs/20261118_195456_cornorb_resnet18
 
 1. **Les erreurs sont complémentaires.** Sur les 4 kératocônes manqués par les images, **3 sont détectés par les chiffres**
    (Kmax élevé, cornée fine). Et l'unique fausse alerte des images est clairement « normale » pour les chiffres.
-   → **Piste n°1 d'amélioration : combiner images + chiffres** (fusion), en suivant le même protocole (réglage sur la
-   validation uniquement). On ne l'a PAS testé ici pour ne pas toucher au test.
+   → D'où l'essai de **fusion images + chiffres** (§ 4).
 
 2. **La « fausse alerte » 66NY2 OS mérite l'avis du médecin.** Sa carte axiale montre une zone plus bombée en bas
    (environ 45,5 D en inférieur contre 41,6 D en supérieur). Une telle asymétrie inférieure fait partie des signes décrits
@@ -55,10 +55,39 @@ qarniya evaluate outputs/runs/20261118_195456_cornorb_resnet18
    Inversement, **G3H95 OD** (kératocône, Kmax 50,9) a une carte très bombée mais plutôt **symétrique** :
    le modèle la classe saine (0,001). Les chiffres, eux, l'attrapent.
 
-## 4. Fichiers produits (`<run>/evaluation/`)
-`metrics.json` · `report.md` · `predictions_test.csv` (toutes les prédictions) · `errors.csv` · `roc_test.png` · `confusion_test.png`
+## 4. Essai de fusion images + chiffres
 
-## 5. Le code
+**Réserve de méthode, à annoncer :** l'idée de la fusion vient de l'analyse des erreurs **sur le test**. Pour limiter ce biais,
+la méthode a été fixée à l'avance et n'a **aucun paramètre appris** : la **moyenne des deux probabilités** (*vote moyen*).
+Seul le seuil est choisi, sur la validation. Le test a été évalué une seule fois avec la fusion
+(`--force` : les résultats images et chiffres sont restés identiques à la décimale).
+
+| | AUC | Sensibilité | Spécificité | KC manqués | Fausses alertes |
+|---|---|---|---|---|---|
+| Images seules | 0,996 | **95,6 %** | 99,4 % | **4** | 1 |
+| Fusion (seuil 0,501 choisi sur la validation) | **1,000** | 94,5 % | 99,4 % | 5 | 1 |
+
+![Matrice de confusion de la fusion](figures/confusion_fusion_test.png)
+
+**Lecture honnête :**
+- ✅ La fusion **classe parfaitement** les 267 yeux (AUC 1,000) : un seuil sans aucune erreur existe…
+- ❌ … mais le seuil choisi sur la validation (0,501) ne tombe pas au bon endroit : la fusion manque **1 kératocône de plus**
+  que les images seules. **Elle ne remplace donc pas le modèle images.**
+- 🔎 **Pourquoi :** sur la validation, les images ne font aucune erreur, donc les deux modèles ne sont **jamais en désaccord**.
+  Sur le test, chaque désaccord franc (images sûres à 0,99, chiffres sûrs à 0,01) donne une moyenne ≈ **0,5**, pile au
+  niveau du seuil. La validation ne contenait aucun cas de ce type pour apprendre où placer la frontière.
+
+**Conséquence pour le produit (décision) :**
+- le **score principal reste celui des images** (meilleur résultat au seuil prévu) ;
+- quand le médecin saisit Kmax et épaisseur, l'outil affiche **aussi l'avis des chiffres** et signale un **désaccord** :
+  un score fusionné proche de 0,5 = « deux experts en désaccord » → niveau **« À surveiller »** (zone 0,3–0,7, définie dans
+  le domaine dès l'étape 2) → le médecin regarde de plus près ;
+- la fusion sera **réévaluée sur les données de notre ophtalmologue** (nouvelles données, jamais vues) avant toute adoption.
+
+## 5. Fichiers produits (`<run>/evaluation/`)
+`metrics.json` · `report.md` · `predictions_test.csv` (toutes les prédictions) · `errors.csv` (yeux mal classés par au moins un modèle) · `roc_test.png` · `confusion_test.png` · `confusion_fusion_test.png`
+
+## 6. Le code
 
 | Fichier | Rôle |
 |---|---|
@@ -66,8 +95,9 @@ qarniya evaluate outputs/runs/20261118_195456_cornorb_resnet18
 | `evaluation/thresholds.py` | seuil pour une sensibilité visée, placé au **milieu** d'un écart entre scores |
 | `evaluation/bootstrap.py` | fourchettes de confiance **par patient** |
 | `evaluation/baseline.py` | régression logistique sur les chiffres de l'appareil |
+| `evaluation/fusion.py` | vote moyen de plusieurs avis (aucun paramètre appris) |
 | `evaluation/figures.py` | ROC et matrice de confusion (palette lisible par les daltoniens) |
 | `evaluation/runner.py` | le protocole complet + rapport |
 
-Tests ajoutés (92 au total) : seuil vérifié à la main, fourchettes reproductibles et **plus larges par patient que par œil**
+Tests ajoutés (94 au total) : seuil vérifié à la main, fourchettes reproductibles et **plus larges par patient que par œil**
 (démontré), baseline avec valeurs manquantes, figures, évaluation de bout en bout, **protection contre une 2e évaluation**.

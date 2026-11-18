@@ -114,9 +114,10 @@ def synthetic_rows() -> list[dict[str, str]]:
         if i >= 10:
             split, fold = "test", ""
         for eye in ("OD", "OS"):
+            kmax = 43.0 + 8.0 * (i % 2) + 0.1 * i  # Kmax plus élevé chez les malades
             rows.append(
                 {"patient_code": f"P{i:02d}", "eye": eye, "label": str(i % 2),
-                 "split_80_20": split, "fold": fold}
+                 "kmax_value_D": f"{kmax:.1f}", "split_80_20": split, "fold": fold}
             )  # fmt: skip
     return rows
 

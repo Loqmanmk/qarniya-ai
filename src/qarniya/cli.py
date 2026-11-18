@@ -117,7 +117,7 @@ def evaluate(
         typer.secho(f"Erreur : {exc}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from exc
     typer.secho(f"Jeu de test : {result.n_test} yeux", bold=True)
-    for evaluation in filter(None, (result.model, result.baseline)):
+    for evaluation in result.evaluations:
         t, ci = evaluation.test, evaluation.confidence
         sens = ci["sensitivity"]
         typer.echo(f"  {evaluation.name}")

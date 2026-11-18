@@ -216,3 +216,15 @@
 **Q41. Pourquoi n'évaluez-vous le test qu'une fois ?**
 > Si l'on regarde le test, qu'on modifie le modèle, puis qu'on re-teste, on finit par ajuster le modèle au test et le
 > score devient optimiste. Notre outil refuse une 2e évaluation sauf avec `--force` explicite.
+
+**Q42. Avez-vous essayé de combiner images et chiffres ?**
+> Oui, par un vote moyen sans paramètre appris, seuil réglé sur la validation. La fusion classe parfaitement le test
+> (AUC 1,000), mais au seuil prévu elle manque un kératocône de plus que les images seules. Nous ne l'adoptons donc pas
+> comme score principal. Nous l'annonçons honnêtement : l'idée venait de l'analyse des erreurs du test, il faudra la
+> confirmer sur de nouvelles données (celles de notre ophtalmologue).
+
+**Q43. Pourquoi la fusion n'a-t-elle pas mieux marché alors que son AUC est parfaite ?**
+> Parce qu'un bon classement ne suffit pas : il faut aussi savoir où placer le seuil. Sur la validation, nos deux modèles
+> ne sont jamais en désaccord, donc rien n'indique où mettre la frontière pour les cas où ils se contredisent. Sur le
+> test, ces désaccords tombent tous autour de 0,5, pile sur le seuil. Leçon : un désaccord entre deux experts est une
+> information en soi. Dans l'outil, il déclenche le niveau « À surveiller ».
