@@ -1,0 +1,52 @@
+# Dataset public CornOrb (Orbscan 3, Algérie) — Lazouni et al., Zenodo 2025, CC BY 4.0
+# DOI 10.5281/zenodo.17121301
+name: cornorb
+adapter: csv_images
+root: data/cornorb
+csv: clinical_data_and_labels.csv
+image_pattern: "ORBSCAN_Dataset/{patient}/{eye}/{patient}_{eye}_{map}.png"
+device: Orbscan 3
+
+columns:
+  patient: patient_code
+  eye: eye
+  label: label
+
+eye_values:
+  OD: OD
+  OS: OS
+
+map_tokens:
+  axial: Axial
+  anterior: Anterior
+  posterior: Posterior
+  pachymetry: Pachymetry
+
+label_values:
+  "0": normal
+  "1": keratoconus
+
+clinical_columns:
+  age: age_years
+  kmax: kmax_value_D
+  astigmatism: astig_value_D
+  pachymetry_central: pachy_central_um
+  pachymetry_thinnest: pachy_thinnest_um
+  asphericity_anterior: asphericity_anterior
+  asphericity_posterior: asphericity_posterior
+
+# Le CSV contient "3E+132" (code transformé par Excel) alors que le dossier s'appelle "3E132"
+patient_code_fixes:
+  "3E+132": "3E132"
+
+# 46 yeux apparaissent deux fois avec des valeurs différentes : écartés
+drop_ambiguous_duplicates: true
+
+# Le dataset fournit son découpage par patient : on le réutilise (résultats comparables à l'article)
+split:
+  strategy: column
+  column: split_80_20
+  train_value: train
+  test_value: test
+  val_fold_column: fold
+  val_fold: 1

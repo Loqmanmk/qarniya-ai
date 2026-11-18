@@ -58,8 +58,7 @@ qarniya data inspect configs/data/mon_dataset.yaml --check-images
 ```python
 @register_adapter("pentacam_xml")
 class PentacamXmlAdapter(DatasetAdapter):
-    def load(self) -> LoadResult:
-        ...  # lire le XML, renvoyer des CornealExam
+    def load(self) -> LoadResult: ...  # lire le XML, renvoyer des CornealExam
 ```
 Puis `adapter: pentacam_xml` dans le YAML. **Aucun autre fichier n'est modifié.**
 (Le test `test_new_adapter_can_be_plugged_without_touching_existing_code` le démontre.)

@@ -8,8 +8,10 @@ build/
 dist/
 
 # Données et résultats : jamais dans Git (taille + données de santé)
-data/
-outputs/
+# Le « / » initial limite la règle à la RACINE du dépôt : sans lui, « data/ » excluait aussi
+# le paquet de code src/qarniya/data/ (bug corrigé le 18/11).
+/data/
+/outputs/
 *.pt
 *.pth
 *.zip
@@ -23,7 +25,8 @@ mlruns/
 htmlcov/
 .ipynb_checkpoints/
 
-# Éditeurs / système
+# Éditeurs / outils locaux / système
+.claude/
 .vscode/
 .idea/
 .DS_Store

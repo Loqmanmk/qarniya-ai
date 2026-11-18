@@ -1,0 +1,45 @@
+# Données du médecin partenaire (format demandé dans notre lettre) :
+#   data/medecin/images/P017_OG_axiale.png, P017_OG_anterieure.png, ...
+#   data/medecin/tableau.csv  -> colonnes : code, oeil, age, sexe, kmax, epaisseur_min, diagnostic
+# Adaptez les libellés ci-dessous s'ils diffèrent : AUCUN code à modifier.
+name: medecin
+adapter: csv_images
+root: data/medecin
+csv: tableau.csv
+image_pattern: "images/{patient}_{eye}_{map}.png"
+device: à préciser (Orbscan / Pentacam / Sirius)
+
+columns:
+  patient: code
+  eye: oeil
+  label: diagnostic
+  exam_date: date_examen   # supprimez cette ligne s'il n'y a qu'un examen par œil
+
+eye_values:
+  OD: OD
+  OG: OS   # œil gauche en français
+  OS: OS
+
+map_tokens:
+  axial: axiale
+  anterior: anterieure
+  posterior: posterieure
+  pachymetry: pachymetrie
+
+label_values:
+  normal: normal
+  suspect: suspect
+  keratocone: keratoconus
+  kératocône: keratoconus
+
+clinical_columns:
+  age: age
+  kmax: kmax
+  pachymetry_thinnest: epaisseur_min
+
+# Pas de découpage fourni : on découpe par patient (aucun patient dans deux ensembles)
+split:
+  strategy: patient
+  test_size: 0.2
+  val_size: 0.15
+  seed: 42

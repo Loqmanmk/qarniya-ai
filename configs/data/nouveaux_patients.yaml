@@ -1,0 +1,17 @@
+# Analyse de nouveaux patients SANS tableau ni diagnostic : un simple dossier d'images.
+#   data/nouveaux/P101_OD_axiale.png, P101_OD_anterieure.png, ...
+name: nouveaux
+adapter: image_folder
+root: data/nouveaux
+image_pattern: "{patient}_{eye}_{map}.png"
+
+eye_values:
+  OD: OD
+  OG: OS
+  OS: OS
+
+map_tokens:
+  axial: axiale
+  anterior: anterieure
+  posterior: posterieure
+  pachymetry: pachymetrie
