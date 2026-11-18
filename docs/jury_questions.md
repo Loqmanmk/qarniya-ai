@@ -82,3 +82,38 @@
 **Q16. Pourquoi les seuils de risque sont-ils configurables ?**
 > Parce que le besoin médical change selon le contexte : un centre LASIK veut être **plus prudent** (seuils plus bas,
 > plus de fausses alertes mais moins de kératocônes manqués) qu'une campagne de dépistage de masse.
+
+---
+
+## Étape 3 — Les données
+
+**Q17. Comment changez-vous de dataset ?**
+> Avec un fichier YAML qui décrit le format : où sont les images, comment s'appellent les colonnes, comment est noté
+> l'œil gauche (`OS` ou `OG`)… Si le format est vraiment nouveau (ex. XML d'un appareil), on écrit **une** classe
+> adaptateur et on l'enregistre ; aucun autre fichier ne change. Démonstration : `qarniya data inspect configs/data/medecin.yaml`.
+
+**Q18. Qu'est-ce que le patron Adaptateur ?**
+> Une classe qui traduit un format externe vers le format interne. Ici, chaque adaptateur transforme sa source en
+> `CornealExam` (objet du domaine). Le modèle et l'interface ne voient jamais le format d'origine.
+
+**Q19. Pourquoi découper par patient et pas par œil ?**
+> Les deux yeux d'un patient se ressemblent. Si l'un est en entraînement et l'autre en test, le modèle est évalué sur
+> un patient déjà vu : le score est gonflé, c'est une **fuite de données**. Notre code découpe par patient et
+> **vérifie automatiquement** qu'aucun patient n'est dans deux ensembles.
+
+**Q20. Avez-vous trouvé des problèmes dans les données ?**
+> Oui, deux. 1) 46 yeux apparaissent deux fois dans le CSV avec des valeurs différentes mais un seul jeu d'images :
+> on ne peut pas savoir quelle ligne est la bonne, on les écarte (93 lignes). 2) Un code patient `3E132` transformé
+> en `3E+132` par Excel : corrigé dans la configuration, pas dans le code. Chaque exclusion est tracée avec sa raison.
+
+**Q21. Pourquoi ne pas simplement supprimer les lignes en double ?**
+> Garder une des deux au hasard, c'est risquer d'associer de mauvaises valeurs (Kmax, diagnostic) aux images.
+> En médecine, mieux vaut **moins de données sûres** que plus de données douteuses.
+
+**Q22. Que se passe-t-il si le médecin envoie une image floue ou incomplète ?**
+> Le contrôle qualité la refuse avec un message précis (« pachymétrie : image vide »), et un œil sans ses 4 cartes
+> n'est pas analysé. L'outil dit « je ne peux pas » au lieu de donner un score au hasard.
+
+**Q23. Comment être sûr que tout cela marche ?**
+> 60 tests automatiques sur de faux mini-datasets générés à la volée (ils tournent aussi sur GitHub, sans données
+> réelles), plus un test sur le vrai CornOrb qui vérifie les chiffres exacts. Couverture : 94 %.
