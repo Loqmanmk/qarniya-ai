@@ -13,14 +13,14 @@ repos:
       - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.17.5   # = version de ruff dans pyproject.toml
     hooks:
-      - id: ruff            # lint + corrections automatiques
+      - id: ruff-check      # lint + sécurité (règles Bandit) + corrections automatiques
         args: ["--fix"]
       - id: ruff-format     # formatage
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0
+    rev: v2.4.1    # = version de mypy dans pyproject.toml
     hooks:
       # Vérification des types des fichiers COMMITÉS uniquement (la CI, elle, vérifie tout le paquet).
       # Environnement isolé : PyTorch, pandas… n'y sont pas installés (trop lourds), voir pyproject.toml.

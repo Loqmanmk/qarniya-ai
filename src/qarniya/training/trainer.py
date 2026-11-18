@@ -70,7 +70,8 @@ class Trainer:
                 train_loss=train_loss,
                 val_loss=preds.loss,
                 val=compute_binary_metrics(preds.targets.tolist(), preds.probabilities.tolist()),
-                learning_rate=self.scheduler.get_last_lr()[0],
+                # float() : selon la version de PyTorch, get_last_lr() rend un float ou un Tensor
+                learning_rate=float(self.scheduler.get_last_lr()[0]),
                 improved=improved,
             )
             self.scheduler.step()

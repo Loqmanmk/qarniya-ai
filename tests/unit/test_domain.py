@@ -63,7 +63,7 @@ def test_exam_survives_pickle_for_multiprocess_loading() -> None:
         maps=make_maps(),
         clinical={"kmax": 47.0},
     )
-    copy = pickle.loads(pickle.dumps(exam))
+    copy = pickle.loads(pickle.dumps(exam))  # noqa: S301  (objet créé par le test lui-même)
     assert copy == exam
     assert copy.clinical["kmax"] == 47.0
     with pytest.raises(TypeError):

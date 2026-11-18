@@ -68,11 +68,19 @@ def resolve_device(device: Device) -> torch.device:
 
 
 def git_commit() -> str | None:
+    """Commit Git du code utilisé (traçabilité). None si Git est absent : jamais bloquant."""
+    git = shutil.which("git")  # chemin complet : on n'exécute pas un « git » inconnu du PATH
+    if git is None:
+        return None
     try:
-        out = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+        out = subprocess.run(  # noqa: S603  (commande fixe, aucune donnée externe)
+            [git, "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=10,
         )
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip() or None
 
@@ -83,7 +91,7 @@ def load_splits(config: ExperimentConfig, limit: int | None = None) -> DatasetSp
     splits = split_dataset(result, data_config.split)
     if limit is None:
         return splits
-    rng = random.Random(config.training.seed)
+    rng = random.Random(config.training.seed)  # noqa: S311  (échantillonnage, pas de la sécurité)
 
     def sample(exams: tuple[CornealExam, ...], n: int) -> tuple[CornealExam, ...]:
         return tuple(rng.sample(exams, min(n, len(exams))))

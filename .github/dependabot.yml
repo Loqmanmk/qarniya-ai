@@ -1,0 +1,14 @@
+# Dependabot propose chaque semaine une mise à jour des dépendances (correctifs de sécurité inclus),
+# sous forme de pull request : la CI la vérifie avant qu'on l'accepte.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

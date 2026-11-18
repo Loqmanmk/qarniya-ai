@@ -151,3 +151,28 @@
 **Q30. Comment être sûr d'utiliser le modèle comme à l'entraînement ?**
 > La préparation des images (taille, miroir) est enregistrée DANS le fichier du modèle et relue automatiquement.
 > C'est une source d'erreur classique en production que notre conception rend impossible.
+
+---
+
+## Qualité et sécurité
+
+**Q31. Comment garantissez-vous la sécurité du code ?**
+> À chaque commit et dans la CI : règles de sécurité **Bandit** (secrets en dur, exécution de commandes, `pickle`…),
+> détection de clés privées, et **pip-audit** qui compare nos dépendances aux bases de vulnérabilités publiques.
+> **Dependabot** propose chaque semaine les mises à jour de sécurité. La CI n'a que des droits de lecture et ses
+> actions sont épinglées par empreinte (SHA), pour qu'on ne puisse pas les remplacer en douce.
+
+**Q32. Un fichier modèle peut-il être dangereux ?**
+> Oui : un fichier PyTorch classique peut contenir du code qui s'exécute au chargement. Nous chargeons nos modèles
+> avec `weights_only=True`, qui n'accepte que des poids et des valeurs simples.
+
+**Q33. Avez-vous des vulnérabilités connues ?**
+> Oui, et nous les assumons : PyTorch 2.6 a des avis de sécurité publiés (surtout des plantages sur des opérations
+> précises). L'outil tourne en local et ne charge que nos propres modèles. La mise à jour est planifiée après le
+> hackathon, avec ré-entraînement. C'est documenté dans SECURITY.md. (pip-audit a aussi trouvé une version vulnérable
+> de setuptools dans notre environnement : corrigée.)
+
+**Q34. Pourquoi fixer les versions exactes des outils ?**
+> Pour que le PC du développeur, pre-commit et la CI vérifient exactement la même chose. Nous l'avons appris à nos
+> dépens : la CI installait une version plus récente de PyTorch dont les types diffèrent, et rejetait un code accepté
+> sur notre PC. Aujourd'hui : versions identiques partout, et une commande `python scripts/check.py` qui reproduit la CI.

@@ -22,7 +22,14 @@ pre-commit install
 qarniya version
 ```
 
-## Commandes de qualité
+## Avant chaque push : une seule commande
+```powershell
+python scripts/check.py
+```
+Elle lance **exactement** les vérifications de la CI (lint + sécurité, formatage, types, tests, dépendances vulnérables).
+Tout vert = vous pouvez pousser. Voir aussi [SECURITY.md](SECURITY.md).
+
+## Commandes de qualité (détail)
 | Commande | Rôle |
 |---|---|
 | `ruff check .` | détecte erreurs et mauvaises pratiques |
@@ -31,6 +38,7 @@ qarniya version
 | `pytest` | lance les tests |
 | `pytest --cov` | tests + couverture de code |
 | `pre-commit run --all-files` | tout vérifier comme avant un commit |
+| `pip-audit --skip-editable` | cherche les vulnérabilités connues des dépendances |
 
 ## Organisation du dépôt
 ```
@@ -47,6 +55,7 @@ prototype/      premier prototype du 18/11 (référence, non maintenu)
 - [Cadrage du projet](docs/01_cadrage.md)
 - [Architecture](docs/02_architecture.md)
 - [Questions du jury](docs/jury_questions.md)
+- [Sécurité et données](SECURITY.md)
 
 ## Données
 Dataset CornOrb — Lazouni M.E.A. et al., Zenodo 2025, DOI [10.5281/zenodo.17121301](https://doi.org/10.5281/zenodo.17121301), licence CC BY 4.0.
