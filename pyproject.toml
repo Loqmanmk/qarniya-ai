@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-serve = ["fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9", "gradio>=4.0"]
+serve = ["fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9", "httpx>=0.27"]
 # Outils de qualité en version EXACTE : votre PC, pre-commit et la CI vérifient la même chose.
 # (Les mettre à jour volontairement, ensemble, quand Dependabot le propose.)
 dev = [
@@ -45,6 +45,9 @@ qarniya = "qarniya.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"qarniya.api" = ["static/*"]  # l'interface web est livrée avec le paquet
 
 # ---------- Qualité du code ----------
 [tool.ruff]

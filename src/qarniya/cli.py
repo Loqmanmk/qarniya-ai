@@ -215,5 +215,61 @@ def analyse(
     typer.secho(f"Liste triée par urgence : {out_dir / 'triage.csv'}", bold=True)
 
 
+@app.command()
+def prepare(
+    run_dir: Path = typer.Argument(..., help="Dossier du modèle (outputs/runs/...)"),  # noqa: B008
+) -> None:
+    """Prépare un modèle pour l'usage : détecteur d'images inhabituelles + avis des chiffres."""
+    from qarniya.models import Predictor
+    from qarniya.services import (
+        CLINICAL_FILE,
+        NOVELTY_FILE,
+        ClinicalOpinionModel,
+        fit_novelty_detector,
+    )
+
+    try:
+        data_config = DatasetConfig.from_yaml(run_dir / "dataset.yaml")
+        splits = split_dataset(build_adapter(data_config).load(), data_config.split)
+        predictor = Predictor.from_checkpoint(run_dir / "model.pt")
+        detector, _ = fit_novelty_detector(predictor, list(splits.train), list(splits.val))
+        positives = set(predictor.loaded.metadata.get("positive_labels", ["keratoconus"]))
+        targets = [int(e.diagnosis is not None and e.diagnosis.value in positives)
+                   for e in splits.train]  # fmt: skip
+        clinical = ClinicalOpinionModel.fit(splits.train, targets)
+    except (ConfigError, QarniyaError) as exc:
+        typer.secho(f"Erreur : {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    detector.save(run_dir / NOVELTY_FILE)
+    clinical.save(run_dir / CLINICAL_FILE)
+    typer.secho("Modèle prêt à l'emploi", bold=True)
+    typer.echo(f"  Détecteur d'images inhabituelles : {run_dir / NOVELTY_FILE}")
+    typer.echo(f"  Avis des chiffres (Kmax, épaisseur) : {run_dir / CLINICAL_FILE}")
+
+
+@app.command()
+def serve(
+    run_dir: Path = typer.Argument(..., help="Dossier du modèle (outputs/runs/...)"),  # noqa: B008
+    host: str = typer.Option("127.0.0.1", help="127.0.0.1 = ce PC seulement (recommandé)"),
+    port: int = typer.Option(8000, help="Port HTTP"),
+) -> None:
+    """Lance l'API et l'interface web du médecin."""
+    import uvicorn
+
+    from qarniya.api import create_app
+    from qarniya.services import AnalysisService
+
+    try:
+        service = AnalysisService.from_run(run_dir)
+    except (ConfigError, QarniyaError) as exc:
+        typer.secho(f"Erreur : {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    if host not in ("127.0.0.1", "localhost"):
+        typer.secho("⚠ Ouvert au réseau : aucune authentification. Réseau de confiance seulement.",
+                    fg=typer.colors.YELLOW)  # fmt: skip
+    typer.secho(f"Qarniya AI : http://{host}:{port}  (documentation : /docs)", bold=True)
+    uvicorn.run(create_app(service), host=host, port=port, log_level="warning")
+
+
 if __name__ == "__main__":
     app()

@@ -255,3 +255,32 @@
 **Q48. Comment un médecin utilise-t-il l'outil sur une consultation chargée ?**
 > Il dépose les examens du jour ; l'outil rend une liste triée par urgence : d'abord les cas à revoir (images refusées
 > ou inhabituelles), puis risque élevé, à surveiller, faible. Chaque œil a sa figure explicative.
+
+---
+
+## Étape 7 — L'application
+
+**Q49. Comment un médecin utilise-t-il concrètement votre outil ?**
+> Il ouvre une page web, glisse les 4 cartes exportées de son appareil, et obtient en quelques secondes un score, un
+> niveau de risque, les zones suspectes sur chaque carte et une phrase d'explication. S'il saisit Kmax et l'épaisseur
+> minimale, il a aussi l'avis des chiffres. Un deuxième onglet compare deux examens pour suivre la progression.
+
+**Q50. Pourquoi demander Kmax et l'épaisseur alors que vous avez les images ?**
+> Parce que nos analyses ont montré que les erreurs des images et des chiffres sont complémentaires. Exemple réel :
+> le kératocône G3H95 OD est manqué par les images (0 %) mais les chiffres disent 84 %. L'outil détecte ce désaccord et
+> classe l'œil « à surveiller » au lieu de « faible ». C'est un filet de sécurité.
+
+**Q51. Votre application est-elle sécurisée ?**
+> Les fichiers sont vérifiés en les décodant (pas sur leur extension), limités en taille, jamais utilisés comme chemin,
+> ré-encodés pour effacer les métadonnées, et supprimés après chaque analyse : rien n'est conservé. La page a une
+> politique de sécurité stricte (CSP) et n'affiche jamais de texte du serveur comme du code. Par défaut, le serveur
+> n'écoute que sur l'ordinateur lui-même. Limite assumée : pas d'authentification, il faudrait l'ajouter avant un
+> déploiement réseau.
+
+**Q52. Pourquoi une API en plus de l'interface ?**
+> Pour que d'autres logiciels (dossier patient, logiciel de l'appareil) puissent appeler Qarniya. L'interface web
+> n'est qu'un client de l'API. La documentation est générée automatiquement sur /docs.
+
+**Q53. Que se passe-t-il si on compare deux examens dont l'un est douteux ?**
+> La comparaison est refusée : « au moins un des deux examens n'est pas fiable ». Mieux vaut pas de réponse qu'une
+> fausse conclusion sur la progression, qui déciderait d'un traitement.

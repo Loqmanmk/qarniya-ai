@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Qarniya AI</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">◉</span>
+    <div>
+      <h1>Qarniya AI</h1>
+      <p class="tagline">Dépistage précoce du kératocône · aide à la décision</p>
+    </div>
+  </div>
+  <div class="chips" id="health" aria-live="polite"></div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab active" role="tab" aria-selected="true" data-tab="analyse">Analyse d'un œil</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="progression">Suivi de progression</button>
+</nav>
+
+<main>
+  <!-- ======================= ANALYSE ======================= -->
+  <section id="tab-analyse" class="panel">
+    <form id="form-analyse" class="card">
+      <div class="form-head">
+        <h2>Les 4 cartes de l'œil</h2>
+        <fieldset class="eye">
+          <legend class="sr-only">Œil</legend>
+          <label><input type="radio" name="eye" value="OD" checked> Œil droit (OD)</label>
+          <label><input type="radio" name="eye" value="OS"> Œil gauche (OS)</label>
+        </fieldset>
+      </div>
+      <p class="hint">Glissez les 4 images d'un coup sur la zone : elles sont rangées automatiquement
+        d'après leur nom (axiale, antérieure, postérieure, pachymétrie).</p>
+      <div class="dropzone" data-group="exam"></div>
+
+      <details class="numbers">
+        <summary>Deuxième avis : saisir Kmax et épaisseur minimale (facultatif)</summary>
+        <div class="numbers-grid">
+          <label>Kmax (D) <input type="number" name="kmax" step="0.1" min="30" max="90" placeholder="ex. 47.5"></label>
+          <label>Épaisseur minimale (µm) <input type="number" name="pachymetry_thinnest" step="1" min="150" max="800" placeholder="ex. 480"></label>
+        </div>
+      </details>
+
+      <div class="actions">
+        <button type="submit" class="primary" id="btn-analyse">Analyser</button>
+        <span class="busy" hidden>Analyse en cours…</span>
+      </div>
+      <p class="error" role="alert" hidden></p>
+    </form>
+    <div id="result-analyse"></div>
+  </section>
+
+  <!-- ======================= PROGRESSION ======================= -->
+  <section id="tab-progression" class="panel" hidden>
+    <form id="form-progression" class="card">
+      <div class="form-head">
+        <h2>Deux examens du même œil</h2>
+        <fieldset class="eye">
+          <legend class="sr-only">Œil</legend>
+          <label><input type="radio" name="eye" value="OD" checked> Œil droit (OD)</label>
+          <label><input type="radio" name="eye" value="OS"> Œil gauche (OS)</label>
+        </fieldset>
+      </div>
+      <div class="two-col">
+        <div>
+          <h3>Examen ancien</h3>
+          <div class="dropzone" data-group="before"></div>
+        </div>
+        <div>
+          <h3>Examen récent</h3>
+          <div class="dropzone" data-group="after"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="primary" id="btn-progression">Comparer</button>
+        <span class="busy" hidden>Comparaison en cours…</span>
+      </div>
+      <p class="error" role="alert" hidden></p>
+    </form>
+    <div id="result-progression"></div>
+  </section>
+</main>
+
+<footer class="disclaimer">
+  ⚕ Outil d'aide au dépistage. Il ne pose pas de diagnostic : la décision reste celle de l'ophtalmologue.
+  Aucune image n'est conservée. · <a href="/docs">Documentation de l'API</a>
+</footer>
+</body>
+</html>

@@ -119,3 +119,24 @@ def test_small_change_is_considered_stable() -> None:
     )
     assert not progression.is_progressing
     assert not progression.is_improving
+
+
+# ---------- deux avis ----------
+def test_frank_disagreement_between_opinions_means_monitor() -> None:
+    from qarniya.domain import OpinionComparison
+
+    images = RiskAssessment.from_probability("e1", 0.02)  # faible
+    numbers = RiskAssessment.from_probability("e1", 0.95)  # élevé
+    comparison = OpinionComparison(images, numbers)
+    assert comparison.disagree
+    assert comparison.final_level is RiskLevel.MONITOR
+
+
+def test_agreeing_opinions_keep_the_image_level() -> None:
+    from qarniya.domain import OpinionComparison
+
+    comparison = OpinionComparison(
+        RiskAssessment.from_probability("e1", 0.9), RiskAssessment.from_probability("e1", 0.5)
+    )
+    assert not comparison.disagree
+    assert comparison.final_level is RiskLevel.HIGH

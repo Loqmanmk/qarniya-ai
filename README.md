@@ -22,6 +22,13 @@ pre-commit install
 qarniya version
 ```
 
+## Lancer l'application du médecin
+```powershell
+qarniya prepare outputs/runs/<run>
+qarniya serve outputs/runs/<run> --port 8765
+```
+Puis ouvrir http://127.0.0.1:8765 (documentation de l'API : `/docs`). Détails : [docs/07_api_interface.md](docs/07_api_interface.md).
+
 ## Avant chaque push : une seule commande
 ```powershell
 python scripts/check.py
@@ -56,6 +63,7 @@ prototype/      premier prototype du 18/11 (référence, non maintenu)
 - [Architecture](docs/02_architecture.md)
 - [Résultats sur le jeu de test](docs/05_evaluation.md)
 - [Explicabilité et garde-fous](docs/06_explicabilite_garde_fous.md)
+- [API et interface du médecin](docs/07_api_interface.md)
 - [Questions du jury](docs/jury_questions.md)
 - [Sécurité et données](SECURITY.md)
 

@@ -7,7 +7,12 @@ Règle d'architecture : ce paquet ne dépend d'AUCUNE bibliothèque technique
 from qarniya.domain.entities import CornealExam, CornealMaps
 from qarniya.domain.enums import Diagnosis, EyeSide, MapType, RiskLevel
 from qarniya.domain.exceptions import InvalidExamError, MissingMapError, QarniyaError
-from qarniya.domain.risk import ProgressionAssessment, RiskAssessment, RiskThresholds
+from qarniya.domain.risk import (
+    OpinionComparison,
+    ProgressionAssessment,
+    RiskAssessment,
+    RiskThresholds,
+)
 
 __all__ = [
     "CornealExam",
@@ -17,6 +22,7 @@ __all__ = [
     "InvalidExamError",
     "MapType",
     "MissingMapError",
+    "OpinionComparison",
     "ProgressionAssessment",
     "QarniyaError",
     "RiskAssessment",

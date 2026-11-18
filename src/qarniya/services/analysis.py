@@ -20,9 +20,16 @@ import torch
 from PIL import Image
 
 from qarniya.data import ImageQualityChecker
-from qarniya.domain import CornealExam, RiskAssessment, RiskLevel, RiskThresholds
+from qarniya.domain import (
+    CornealExam,
+    OpinionComparison,
+    RiskAssessment,
+    RiskLevel,
+    RiskThresholds,
+)
 from qarniya.explainability import MAP_LABELS, Explanation, GradCam, save_explanation_figure
 from qarniya.models import NoveltyDetector, Predictor
+from qarniya.services.clinical import CLINICAL_FILE, FEATURES, ClinicalOpinionModel
 
 NOVELTY_FILE = "novelty.npz"
 
@@ -41,24 +48,45 @@ class AnalysisReport:
     assessment: RiskAssessment | None = None
     explanation: Explanation | None = None
     novelty_distance: float | None = None
+    numbers: RiskAssessment | None = None  # 2e avis : Kmax + épaisseur, si le médecin les a saisis
 
     @property
     def is_reliable(self) -> bool:
         return self.status is AnalysisStatus.ANALYSED
 
-    def summary(self) -> str:
-        """Phrase lisible par le médecin."""
+    @property
+    def comparison(self) -> OpinionComparison | None:
+        if self.assessment is None or self.numbers is None:
+            return None
+        return OpinionComparison(self.assessment, self.numbers)
+
+    @property
+    def final_level(self) -> RiskLevel | None:
+        """Niveau affiché : celui des images, relevé à « à surveiller » en cas de désaccord."""
+        if self.comparison is not None:
+            return self.comparison.final_level
+        return self.assessment.level if self.assessment else None
+
+    def summary(self, with_warning: bool = True) -> str:
+        """Phrase lisible par le médecin. `with_warning=False` quand l'avertissement est
+        déjà affiché à part (bandeau de l'interface web)."""
         if self.status is AnalysisStatus.REJECTED:
             return "Analyse impossible : " + " ; ".join(self.reasons)
         if self.assessment is None or self.explanation is None:
             return "Analyse incomplète"
-        level = self.assessment.level
-        text = f"Risque {level.label} ({self.assessment.probability:.0%})."
-        if level is not RiskLevel.LOW:
+        level = self.final_level or self.assessment.level
+        text = f"Risque {level.label} (images : {self.assessment.probability:.0%})."
+        if self.assessment.level is not RiskLevel.LOW:
             # la chaleur montre ce qui fait MONTER le score : sans risque, elle n'a pas de sens
             main = MAP_LABELS[self.explanation.main_map].lower()
             text += f" Signe surtout vu sur la carte « {main} »."
-        if self.status is AnalysisStatus.UNUSUAL:
+        if self.numbers is not None:
+            text += (
+                f" Avis des chiffres : {self.numbers.level.label} ({self.numbers.probability:.0%})."
+            )
+            if self.comparison is not None and self.comparison.disagree:
+                text += " Désaccord images / chiffres : à examiner."
+        if self.status is AnalysisStatus.UNUSUAL and with_warning:
             text = "⚠ SCORE NON FIABLE : " + " ; ".join(self.reasons) + ". " + text
         return text
 
@@ -70,20 +98,24 @@ class AnalysisService:
         thresholds: RiskThresholds | None = None,
         quality: ImageQualityChecker | None = None,
         novelty: NoveltyDetector | None = None,
+        clinical: ClinicalOpinionModel | None = None,
     ) -> None:
         self.predictor = predictor
         self.thresholds = thresholds or RiskThresholds()
         self.quality = quality or ImageQualityChecker()
         self.novelty = novelty
+        self.clinical = clinical
         self._gradcam = GradCam(predictor.model)
 
     @classmethod
     def from_run(cls, run_dir: Path, device: torch.device | None = None) -> AnalysisService:
-        """Charge le modèle et, s'il existe, son détecteur d'images inhabituelles."""
-        novelty_path = run_dir / NOVELTY_FILE
+        """Charge le modèle et, s'ils existent, le détecteur d'images inhabituelles et l'avis
+        des chiffres (créés par `qarniya prepare`)."""
+        novelty_path, clinical_path = run_dir / NOVELTY_FILE, run_dir / CLINICAL_FILE
         return cls(
             Predictor.from_checkpoint(run_dir / "model.pt", device),
             novelty=NoveltyDetector.load(novelty_path) if novelty_path.is_file() else None,
+            clinical=ClinicalOpinionModel.load(clinical_path) if clinical_path.is_file() else None,
         )
 
     def analyse(self, exam: CornealExam) -> AnalysisReport:
@@ -108,7 +140,12 @@ class AnalysisService:
                     "cet œil ne ressemble pas aux yeux d'entraînement "
                     "(autre appareil ou autre échelle de couleurs ?)",
                 )
-        return AnalysisReport(exam, status, reasons, assessment, explanation, distance)
+        numbers = None
+        if self.clinical is not None and all(f in exam.clinical for f in FEATURES):
+            numbers = RiskAssessment.from_probability(
+                exam.exam_id, self.clinical.probability(dict(exam.clinical)), self.thresholds
+            )
+        return AnalysisReport(exam, status, reasons, assessment, explanation, distance, numbers)
 
     def save_figure(self, report: AnalysisReport, path: Path) -> None:
         if report.explanation is None or report.assessment is None:
@@ -129,7 +166,8 @@ def triage_order(report: AnalysisReport) -> tuple[int, float]:
     if report.status is not AnalysisStatus.ANALYSED or report.assessment is None:
         return (0, 0.0)  # refusés et inhabituels : à revoir en premier
     level_rank = {RiskLevel.HIGH: 1, RiskLevel.MONITOR: 2, RiskLevel.LOW: 3}
-    return (level_rank[report.assessment.level], -report.assessment.probability)
+    level = report.final_level or report.assessment.level
+    return (level_rank[level], -report.assessment.probability)
 
 
 def fit_novelty_detector(

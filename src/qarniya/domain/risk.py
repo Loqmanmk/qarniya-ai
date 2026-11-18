@@ -74,3 +74,25 @@ class ProgressionAssessment:
     @property
     def is_improving(self) -> bool:
         return self.delta <= -self.significant_change
+
+
+@dataclass(frozen=True)
+class OpinionComparison:
+    """Deux avis indépendants sur le même œil : les images (réseau) et les chiffres (Kmax…).
+
+    Règle métier (étape 5) : quand les deux avis se contredisent franchement (l'un « faible »,
+    l'autre « élevé »), le niveau final est au minimum « à surveiller » : le médecin doit regarder.
+    """
+
+    images: RiskAssessment
+    numbers: RiskAssessment
+
+    @property
+    def disagree(self) -> bool:
+        return {self.images.level, self.numbers.level} == {RiskLevel.LOW, RiskLevel.HIGH}
+
+    @property
+    def final_level(self) -> RiskLevel:
+        if self.disagree:
+            return RiskLevel.MONITOR
+        return self.images.level  # sinon l'avis des images (meilleur résultat au test) prime
