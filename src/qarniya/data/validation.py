@@ -36,6 +36,9 @@ class ImageQualityChecker:
     min_side: int = 128  # en dessous, la carte est illisible
     max_aspect_ratio: float = 1.5  # les cartes sont à peu près carrées
     min_std: float = 4.0  # image (presque) unie = vide ou noire
+    # Les cartes de topographie sont en couleurs (saturation moyenne ≥ 0,099 sur CornOrb, 0,53 en
+    # médiane). Une image grise ou presque (photo, scan noir et blanc…) n'est pas une carte.
+    min_saturation: float = 0.05
 
     def check_image(self, path: Path) -> list[str]:
         try:
@@ -53,6 +56,9 @@ class ImageQualityChecker:
             problems.append(f"proportions inattendues ({width}x{height})")
         if float(np.asarray(rgb, dtype=np.float32).std()) < self.min_std:
             problems.append("image vide ou uniforme")
+        saturation = float(np.asarray(rgb.convert("HSV"), dtype=np.float32)[..., 1].mean()) / 255
+        if saturation < self.min_saturation:
+            problems.append("image sans couleurs : ce n'est pas une carte de topographie")
         return problems
 
     def check_exam(self, exam: CornealExam) -> QualityReport:

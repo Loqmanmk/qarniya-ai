@@ -66,12 +66,17 @@ class MultiMapClassifier(nn.Module):
         """Dernière couche convolutive : utilisée par Grad-CAM pour la carte de chaleur."""
         return self.features
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """x : (lot, 4 cartes, 3, H, W) → logits (lot,). Probabilité = sigmoid(logit)."""
+    def embed(self, x: torch.Tensor) -> torch.Tensor:
+        """Empreinte d'un œil : (lot, 4 x canaux) nombres résumant les 4 cartes, avant la décision.
+        Sert à repérer les images inhabituelles (cf. models/novelty.py)."""
         batch, n_maps, channels, height, width = x.shape
         if n_maps != self.n_maps:
             raise ValueError(f"{self.n_maps} cartes attendues, reçu {n_maps}")
         feats = self.features(x.reshape(batch * n_maps, channels, height, width))
-        pooled = self.pool(feats).reshape(batch, -1)
-        logits: torch.Tensor = self.head(pooled).squeeze(1)
+        pooled: torch.Tensor = self.pool(feats).reshape(batch, -1)
+        return pooled
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """x : (lot, 4 cartes, 3, H, W) → logits (lot,). Probabilité = sigmoid(logit)."""
+        logits: torch.Tensor = self.head(self.embed(x)).squeeze(1)
         return logits

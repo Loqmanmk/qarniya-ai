@@ -228,3 +228,30 @@
 > ne sont jamais en désaccord, donc rien n'indique où mettre la frontière pour les cas où ils se contredisent. Sur le
 > test, ces désaccords tombent tous autour de 0,5, pile sur le seuil. Leçon : un désaccord entre deux experts est une
 > information en soi. Dans l'outil, il déclenche le niveau « À surveiller ».
+
+---
+
+## Étape 6 — Expliquer et savoir dire « je ne sais pas »
+
+**Q44. Comment le médecin sait-il POURQUOI l'outil dit « risque élevé » ?**
+> Par la carte de chaleur (Grad-CAM) : les zones en orange sont celles qui ont fait monter le score. Et nous indiquons la
+> part de chaque carte dans la décision, par exemple « élévation antérieure 39 %, postérieure 33 % ». Le médecin sait
+> où regarder. C'est une aide à la lecture, pas une preuve : c'est écrit sur chaque figure.
+
+**Q45. Que se passe-t-il si on donne au logiciel une image d'un autre appareil ?**
+> Un réseau de neurones donne toujours un score, même absurde. Nous avons ajouté un détecteur d'images inhabituelles : il
+> compare l'« empreinte » de l'œil à celles des yeux d'entraînement. En simulant un autre appareil (échelle de couleurs
+> décalée), sur 43 cas où le modèle se serait trompé, 42 sont signalés « score non fiable ». Sur de vrais yeux du même
+> appareil, il ne signale que 1,9 % des cas.
+
+**Q46. Et si l'image est mauvaise (floue, noire, en noir et blanc) ?**
+> Le contrôle qualité la refuse AVANT toute analyse, avec la raison : « Pachymétrie : image sans couleurs ». Aucun score
+> n'est donné. Aucune vraie carte CornOrb n'a été refusée par ces règles.
+
+**Q47. Votre carte de chaleur est-elle précise ?**
+> Non, et nous le disons : elle est calculée sur une grille de 8×8, donc floue, et elle déborde parfois de la cornée.
+> Elle indique la région et la carte qui ont pesé, pas un contour précis du cône.
+
+**Q48. Comment un médecin utilise-t-il l'outil sur une consultation chargée ?**
+> Il dépose les examens du jour ; l'outil rend une liste triée par urgence : d'abord les cas à revoir (images refusées
+> ou inhabituelles), puis risque élevé, à surveiller, faible. Chaque œil a sa figure explicative.

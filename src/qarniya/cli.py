@@ -129,5 +129,91 @@ def evaluate(
     typer.echo(f"  Rapport : {result.output_dir / 'report.md'}")
 
 
+@app.command("fit-novelty")
+def fit_novelty(
+    run_dir: Path = typer.Argument(..., help="Dossier de l'entraînement (outputs/runs/...)"),  # noqa: B008
+    quantile: float = typer.Option(0.99, help="Part des yeux de validation jugés « habituels »"),
+) -> None:
+    """Construit le détecteur d'images inhabituelles (entraînement + validation, jamais le test)."""
+    from qarniya.models import Predictor  # import tardif : torch est lourd
+    from qarniya.services import NOVELTY_FILE, fit_novelty_detector
+
+    try:
+        data_config = DatasetConfig.from_yaml(run_dir / "dataset.yaml")
+        splits = split_dataset(build_adapter(data_config).load(), data_config.split)
+        predictor = Predictor.from_checkpoint(run_dir / "model.pt")
+        detector, distances = fit_novelty_detector(
+            predictor, list(splits.train), list(splits.val), quantile
+        )
+    except (ConfigError, QarniyaError) as exc:
+        typer.secho(f"Erreur : {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    detector.save(run_dir / NOVELTY_FILE)
+    flagged = int((distances > detector.threshold).sum())
+    typer.secho("Détecteur d'images inhabituelles enregistré", bold=True)
+    typer.echo(f"  Référence : {len(detector.reference)} yeux d'entraînement")
+    typer.echo(f"  Seuil     : distance {detector.threshold:.4f} ({quantile:.0%} de la validation)")
+    typer.echo(f"  Contrôle  : {flagged}/{len(distances)} yeux de validation au-delà du seuil")
+    typer.echo(f"  Fichier   : {run_dir / NOVELTY_FILE}")
+
+
+@app.command()
+def analyse(
+    run_dir: Path = typer.Argument(..., help="Dossier du modèle (outputs/runs/...)"),  # noqa: B008
+    data_config_path: Path = typer.Argument(..., help="YAML des examens à analyser"),  # noqa: B008
+    only: list[str] = typer.Option([], "--only", help="Codes patients à analyser (répétable)"),  # noqa: B008
+    limit: int | None = typer.Option(None, help="Nombre maximal d'yeux"),
+    out_dir: Path = typer.Option(Path("outputs/analyses"), "--out", help="Dossier des résultats"),  # noqa: B008
+) -> None:
+    """Analyse des yeux : score, niveau de risque, carte de chaleur, liste triée par urgence."""
+    import csv
+
+    from qarniya.services import AnalysisService, AnalysisStatus, triage_order
+
+    try:
+        service = AnalysisService.from_run(run_dir)
+        exams = list(build_adapter(DatasetConfig.from_yaml(data_config_path)).load().exams)
+    except (ConfigError, QarniyaError) as exc:
+        typer.secho(f"Erreur : {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    if only:
+        exams = [e for e in exams if e.patient_code in set(only)]
+    exams = exams[:limit] if limit else exams
+    if not exams:
+        typer.secho("Aucun examen à analyser.", fg=typer.colors.YELLOW)
+        raise typer.Exit(code=1)
+    if service.novelty is None:
+        typer.secho("(pas de détecteur d'images inhabituelles : lancez `qarniya fit-novelty`)",
+                    fg=typer.colors.YELLOW)  # fmt: skip
+
+    reports = sorted((service.analyse(e) for e in exams), key=triage_order)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for report in reports:
+        exam = report.exam
+        figure = ""
+        if report.status is not AnalysisStatus.REJECTED:
+            figure_path = out_dir / f"{exam.patient_code}_{exam.eye.value}_analyse.png"
+            service.save_figure(report, figure_path)
+            figure = str(figure_path)
+        rows.append(
+            {
+                "patient": exam.patient_code,
+                "oeil": exam.eye.value,
+                "statut": report.status.value,
+                "probabilite": f"{report.assessment.probability:.3f}" if report.assessment else "",
+                "niveau": report.assessment.level.label if report.assessment else "",
+                "resume": report.summary(),
+                "figure": figure,
+            }
+        )
+        typer.echo(f"  {exam.patient_code} {exam.eye.value}  {report.summary()}")
+    with (out_dir / "triage.csv").open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+    typer.secho(f"Liste triée par urgence : {out_dir / 'triage.csv'}", bold=True)
+
+
 if __name__ == "__main__":
     app()

@@ -47,6 +47,8 @@ def checks(fast: bool) -> list[tuple[str, list[str]]]:
         ("Types (mypy)", [*py, "mypy"]),
         ("Tests + couverture (pytest)", [*py, *pytest_args]),
         ("Dépendances vulnérables (pip-audit)", [*py, "pip_audit", "--skip-editable"]),
+        # les hooks tournent dans leur propre environnement (sans PyTorch) : on les vérifie aussi
+        ("Hooks de commit (pre-commit)", [*py, "pre_commit", "run", "--all-files"]),
     ]
 
 

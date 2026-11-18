@@ -53,4 +53,10 @@ def test_exam_report_points_to_the_bad_map(tmp_path: Path) -> None:
 
     report = checker.check_exam(exam)
     assert not report.is_acceptable
-    assert [i.map_type for i in report.issues] == [MapType.PACHYMETRY]
+    assert {i.map_type for i in report.issues} == {MapType.PACHYMETRY}  # seule la carte fautive
+
+
+def test_grayscale_image_is_not_a_topography_map(tmp_path: Path) -> None:
+    write_map(tmp_path / "color.png")
+    Image.open(tmp_path / "color.png").convert("L").convert("RGB").save(tmp_path / "gray.png")
+    assert any("sans couleurs" in p for p in checker.check_image(tmp_path / "gray.png"))

@@ -6,8 +6,9 @@ avec la préparation d'images enregistrée DANS le modèle.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import torch
@@ -55,14 +56,34 @@ class Predictor:
         return cls(load_checkpoint(path, device), device)
 
     @torch.no_grad()
-    def predict(self, exams: Sequence[CornealExam]) -> np.ndarray:
-        """Probabilité de kératocône (0 à 1) pour chaque examen, dans le même ordre."""
-        if not exams:
-            return np.array([], dtype=float)
+    def _run(
+        self, exams: Sequence[CornealExam], step: Callable[[torch.Tensor], torch.Tensor]
+    ) -> np.ndarray:
         loader = DataLoader(
             _InferenceDataset(exams, self.preprocessor),
             batch_size=self.batch_size,
             num_workers=self.num_workers,
         )
-        probs = [torch.sigmoid(self.model(x.to(self.device)).float()).cpu() for x in loader]
-        return torch.cat(probs).numpy().astype(float)
+        return torch.cat([step(x.to(self.device)).float().cpu() for x in loader]).numpy()
+
+    def predict(self, exams: Sequence[CornealExam]) -> np.ndarray:
+        """Probabilité de kératocône (0 à 1) pour chaque examen, dans le même ordre."""
+        if not exams:
+            return np.array([], dtype=float)
+        return self._run(exams, lambda x: torch.sigmoid(self.model(x))).astype(float)
+
+    def _embed_fn(self) -> Callable[[torch.Tensor], torch.Tensor]:
+        embed_fn = getattr(self.model, "embed", None)
+        if not callable(embed_fn):
+            raise TypeError("ce modèle ne fournit pas d'empreinte (`embed`)")
+        return cast(Callable[[torch.Tensor], torch.Tensor], embed_fn)
+
+    def embed(self, exams: Sequence[CornealExam]) -> np.ndarray:
+        """Empreintes (n, d) des examens, pour le détecteur d'images inhabituelles."""
+        return self._run(exams, self._embed_fn())
+
+    @torch.no_grad()
+    def embed_tensor(self, x: torch.Tensor) -> np.ndarray:
+        """Empreinte d'un tenseur déjà préparé (1, 4, 3, H, W)."""
+        result: np.ndarray = self._embed_fn()(x.to(self.device)).float().cpu().numpy()
+        return result

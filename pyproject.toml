@@ -75,9 +75,10 @@ ignore_missing_imports = true   # torch, cv2, sklearn… n'ont pas tous des type
 # nn.Module / Dataset et les décorateurs torch, UNIQUEMENT dans les modules qui utilisent PyTorch.
 # (En CI et en local, PyTorch est installé et ces lignes ne changent rien.)
 [[tool.mypy.overrides]]
-module = ["qarniya.models.*", "qarniya.training.*"]
+module = ["qarniya.models.*", "qarniya.training.*", "qarniya.explainability.*"]
 disallow_subclassing_any = false
 disallow_untyped_decorators = false
+disallow_untyped_calls = false  # ex. torch.enable_grad(), non typé dans PyTorch 2.6
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

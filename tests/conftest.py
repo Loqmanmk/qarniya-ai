@@ -142,3 +142,11 @@ def experiment_yaml(cornorb_like: Callable[..., Path], tmp_path: Path) -> Path:
             "output_dir": str(tmp_path / "runs"),
         },
     )
+
+
+@pytest.fixture
+def trained_run(experiment_yaml: Path) -> Path:
+    """Un mini-modèle entraîné 1 époque (CPU, quelques secondes) et son dossier de résultats."""
+    from qarniya.training import ExperimentConfig, run_experiment
+
+    return run_experiment(ExperimentConfig.from_yaml(experiment_yaml), epochs=1).run_dir

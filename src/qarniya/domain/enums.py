@@ -34,3 +34,8 @@ class RiskLevel(str, Enum):
     LOW = "faible"
     MONITOR = "a_surveiller"
     HIGH = "eleve"
+
+    @property
+    def label(self) -> str:
+        """Libellé affiché au médecin (la valeur, elle, reste un code stable sans accent)."""
+        return {"faible": "faible", "a_surveiller": "à surveiller", "eleve": "élevé"}[self.value]

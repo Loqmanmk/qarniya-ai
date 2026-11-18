@@ -7,14 +7,8 @@ import pytest
 
 from qarniya.domain.exceptions import QarniyaError
 from qarniya.evaluation.runner import evaluate_run
-from qarniya.training import ExperimentConfig, run_experiment
 
 pytestmark = pytest.mark.integration
-
-
-@pytest.fixture
-def trained_run(experiment_yaml: Path) -> Path:
-    return run_experiment(ExperimentConfig.from_yaml(experiment_yaml), epochs=1).run_dir
 
 
 def test_evaluation_writes_full_report(trained_run: Path) -> None:
