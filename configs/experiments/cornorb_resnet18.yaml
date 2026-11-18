@@ -1,0 +1,30 @@
+# Expérience de référence : ResNet18 pré-entraîné sur les 4 cartes CornOrb.
+# Lancer :  qarniya train configs/experiments/cornorb_resnet18.yaml
+name: cornorb_resnet18
+data_config: configs/data/cornorb.yaml
+
+model:
+  name: multimap
+  backbone: resnet18      # autres choix : resnet34, efficientnet_b0
+  pretrained: true        # part des poids ImageNet (transfert d'apprentissage)
+  hidden_dim: 128
+  dropout: 0.3
+
+preprocessing:
+  image_size: 256
+  mirror_left_eye: true
+
+training:
+  epochs: 20
+  batch_size: 16
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  early_stopping_patience: 5
+  augment: true
+  mixed_precision: true
+  num_workers: 2
+  device: auto
+  seed: 42
+  positive_labels: [keratoconus, suspect]
+
+output_dir: outputs/runs

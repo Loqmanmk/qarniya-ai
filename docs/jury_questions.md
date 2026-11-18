@@ -117,3 +117,37 @@
 **Q23. Comment être sûr que tout cela marche ?**
 > 60 tests automatiques sur de faux mini-datasets générés à la volée (ils tournent aussi sur GitHub, sans données
 > réelles), plus un test sur le vrai CornOrb qui vérifie les chiffres exacts. Couverture : 94 %.
+
+---
+
+## Étape 4 — Le modèle et l'entraînement
+
+**Q24. Quel modèle utilisez-vous et pourquoi ?**
+> Un ResNet18 pré-entraîné sur ImageNet, partagé entre les 4 cartes, avec une petite tête qui fusionne les 4
+> descripteurs. Pré-entraîné : il sait déjà voir formes et contours, on l'adapte (*transfert d'apprentissage*).
+> Partagé : 4 fois moins de paramètres, essentiel avec moins de 1 000 yeux d'entraînement.
+
+**Q25. Pourquoi pas un modèle plus gros (Vision Transformer, etc.) ?**
+> Avec ~900 yeux d'entraînement, un gros modèle surapprend (il mémorise au lieu de généraliser). Et ResNet18 tourne
+> en temps réel sur un PC ordinaire, ce qui compte pour un cabinet. Notre architecture permet d'en essayer d'autres
+> par configuration (EfficientNet est déjà disponible).
+
+**Q26. Qu'est-ce que le surapprentissage et comment l'évitez-vous ?**
+> Le modèle apprend par cœur les images d'entraînement et échoue sur de nouvelles. Parades : modèle pré-entraîné et
+> partagé, dropout, augmentation légère, arrêt anticipé sur la perte de validation, et un jeu de test jamais regardé.
+
+**Q27. Pourquoi retourner l'image de l'œil gauche ?**
+> Les deux yeux sont symétriques : le côté nasal est à gauche pour l'un, à droite pour l'autre. En retournant l'œil
+> gauche, une même zone anatomique est toujours au même endroit de l'image. Un test vérifie ce miroir pixel à pixel.
+
+**Q28. Pourquoi ne pas modifier les couleurs pour augmenter les données ?**
+> Parce que sur une carte de topographie, la couleur EST la mesure (rouge = cornée bombée ou fine). Changer les
+> couleurs reviendrait à changer le diagnostic.
+
+**Q29. Vos résultats sont-ils reproductibles ?**
+> Oui : graine aléatoire fixe, configuration copiée dans chaque dossier de résultats, commit Git enregistré dans le
+> modèle. Un test automatique vérifie que deux entraînements identiques donnent la même perte.
+
+**Q30. Comment être sûr d'utiliser le modèle comme à l'entraînement ?**
+> La préparation des images (taille, miroir) est enregistrée DANS le fichier du modèle et relue automatiquement.
+> C'est une source d'erreur classique en production que notre conception rend impossible.

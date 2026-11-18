@@ -1,0 +1,12 @@
+# Variante pour comparer : même données, autre architecture. Seules 3 lignes changent.
+name: cornorb_efficientnet_b0
+data_config: configs/data/cornorb.yaml
+
+model:
+  backbone: efficientnet_b0
+  dropout: 0.3
+
+training:
+  epochs: 20
+  batch_size: 16
+  learning_rate: 0.0003

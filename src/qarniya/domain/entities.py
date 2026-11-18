@@ -6,10 +6,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from types import MappingProxyType
 
 from qarniya.domain.enums import Diagnosis, EyeSide, MapType
 from qarniya.domain.exceptions import InvalidExamError, MissingMapError
+from qarniya.domain.frozen import FrozenMapping
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ class CornealMaps:
         if missing:
             raise MissingMapError(f"Cartes manquantes : {', '.join(missing)}")
         # copie en lecture seule : l'objet ne peut plus être modifié après création
-        object.__setattr__(self, "paths", MappingProxyType(dict(self.paths)))
+        object.__setattr__(self, "paths", FrozenMapping(self.paths))
 
     def ordered(self) -> list[Path]:
         """Les chemins toujours dans le même ordre (celui de MapType), comme l'attend le modèle."""
@@ -48,7 +48,7 @@ class CornealExam:
             raise InvalidExamError("exam_id ne peut pas être vide")
         if not self.patient_code.strip():
             raise InvalidExamError("patient_code ne peut pas être vide")
-        object.__setattr__(self, "clinical", MappingProxyType(dict(self.clinical)))
+        object.__setattr__(self, "clinical", FrozenMapping(self.clinical))
 
     @property
     def is_labelled(self) -> bool:

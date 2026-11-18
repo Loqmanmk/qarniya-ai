@@ -1,6 +1,7 @@
 """Tests de la couche domaine. Chaque test suit le schéma AAA : Arrange (préparer),
 Act (agir), Assert (vérifier)."""
 
+import pickle
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,22 @@ def test_exam_requires_patient_code() -> None:
 def test_unlabelled_exam() -> None:
     exam = CornealExam(exam_id="e1", patient_code="P017", eye=EyeSide.LEFT, maps=make_maps())
     assert not exam.is_labelled
+
+
+def test_exam_survives_pickle_for_multiprocess_loading() -> None:
+    """Régression : PyTorch copie les examens vers ses processus de chargement (Windows)."""
+    exam = CornealExam(
+        exam_id="e1",
+        patient_code="P1",
+        eye=EyeSide.RIGHT,
+        maps=make_maps(),
+        clinical={"kmax": 47.0},
+    )
+    copy = pickle.loads(pickle.dumps(exam))
+    assert copy == exam
+    assert copy.clinical["kmax"] == 47.0
+    with pytest.raises(TypeError):
+        copy.clinical["kmax"] = 0.0  # type: ignore[index]
 
 
 # ---------- RiskThresholds ----------
