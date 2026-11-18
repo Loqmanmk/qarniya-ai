@@ -45,11 +45,13 @@
         <div class="numbers-grid">
           <label>Kmax (D) <input type="number" name="kmax" step="0.1" min="30" max="90" placeholder="ex. 47.5"></label>
           <label>Épaisseur minimale (µm) <input type="number" name="pachymetry_thinnest" step="1" min="150" max="800" placeholder="ex. 480"></label>
+          <label>Référence du rapport (code anonyme) <input type="text" name="reference" maxlength="24" pattern="[A-Za-z0-9_\-]{1,24}" placeholder="ex. P017 — jamais le nom"></label>
         </div>
       </details>
 
       <div class="actions">
         <button type="submit" class="primary" id="btn-analyse">Analyser</button>
+        <button type="button" class="secondary" id="btn-report">⬇ Rapport PDF</button>
         <span class="busy" hidden>Analyse en cours…</span>
       </div>
       <p class="error" role="alert" hidden></p>

@@ -96,24 +96,47 @@ function errorText(payload) {
   return payload.detail.map((d) => `${(d.loc || []).slice(-1)[0] || ""} : ${d.msg}`).join(" ; ");
 }
 
-async function submit(form, url, buildData, render) {
+async function submit(form, url, buildData, render, expect = "json") {
   const error = form.querySelector(".error");
   const busy = form.querySelector(".busy");
-  const button = form.querySelector("button[type=submit]");
+  const buttons = form.querySelectorAll("button");
   error.hidden = true;
   let data;
   try { data = buildData(); } catch (e) { error.textContent = e.message; error.hidden = false; return; }
-  button.disabled = true; busy.hidden = false;
+  buttons.forEach((b) => { b.disabled = true; });
+  busy.hidden = false;
   try {
     const response = await fetch(url, { method: "POST", body: data });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(errorText(payload));
-    render(payload);
+    if (!response.ok) throw new Error(errorText(await response.json()));
+    render(expect === "blob" ? await response.blob() : await response.json());
   } catch (e) {
     error.textContent = e.message; error.hidden = false;
   } finally {
-    button.disabled = false; busy.hidden = true;
+    buttons.forEach((b) => { b.disabled = false; });
+    busy.hidden = true;
   }
+}
+
+function analysisData(form, withReference) {
+  const data = new FormData();
+  data.append("eye", form.querySelector("input[name=eye]:checked").value);
+  addMaps(data, "exam", "");
+  const names = ["kmax", "pachymetry_thinnest", ...(withReference ? ["reference"] : [])];
+  for (const name of names) {
+    const value = form.querySelector(`input[name=${name}]`).value.trim();
+    if (value !== "") data.append(name, value);
+  }
+  return data;
+}
+
+function downloadPdf(blob) {
+  const reference = document.querySelector("#form-analyse input[name=reference]").value.trim();
+  const link = el("a", { download: `qarniya_${reference || "rapport"}.pdf` });
+  link.href = URL.createObjectURL(blob);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
 }
 
 function addMaps(data, group, prefix) {
@@ -232,16 +255,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const formA = document.getElementById("form-analyse");
   formA.addEventListener("submit", (e) => {
     e.preventDefault();
-    submit(formA, "/api/analyses", () => {
-      const data = new FormData();
-      data.append("eye", formA.querySelector("input[name=eye]:checked").value);
-      addMaps(data, "exam", "");
-      for (const name of ["kmax", "pachymetry_thinnest"]) {
-        const value = formA.querySelector(`input[name=${name}]`).value;
-        if (value !== "") data.append(name, value);
-      }
-      return data;
-    }, renderAnalysis);
+    submit(formA, "/api/analyses", () => analysisData(formA, false), renderAnalysis);
+  });
+
+  // Rapport PDF : même analyse, renvoyée en PDF et téléchargée (rien n'est gardé sur le serveur)
+  document.getElementById("btn-report").addEventListener("click", () => {
+    submit(formA, "/api/reports", () => analysisData(formA, true), downloadPdf, "blob");
   });
 
   const formP = document.getElementById("form-progression");

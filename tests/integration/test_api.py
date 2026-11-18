@@ -111,3 +111,25 @@ def test_progression_compares_two_exams(client: TestClient, map_files: dict[str,
     assert body["comparable"] is True
     assert body["delta"] == pytest.approx(0.0, abs=1e-6)  # mêmes images : aucune évolution
     assert body["verdict"].startswith("Score stable")
+
+
+def test_pdf_report_is_downloaded(client: TestClient, map_files: dict[str, bytes]) -> None:
+    response = client.post(
+        "/api/reports",
+        data={"eye": "OS", "kmax": "48.5", "pachymetry_thinnest": "470", "reference": "P017"},
+        files=upload(map_files),
+    )
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "application/pdf"
+    assert 'filename="qarniya_P017_OS.pdf"' in response.headers["content-disposition"]
+    assert response.content.startswith(b"%PDF") and len(response.content) > 20_000
+
+
+@pytest.mark.parametrize("reference", ["Mohamed Alami", "../../etc", "x" * 30, "P017;rm"])
+def test_report_refuses_names_and_odd_references(
+    client: TestClient, map_files: dict[str, bytes], reference: str
+) -> None:
+    response = client.post(
+        "/api/reports", data={"eye": "OD", "reference": reference}, files=upload(map_files)
+    )
+    assert response.status_code == 422

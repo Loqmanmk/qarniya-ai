@@ -17,7 +17,7 @@
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
-pip install -e ".[dev,serve]"
+pip install -e ".[dev,serve,train]"
 pre-commit install
 qarniya version
 ```
@@ -28,6 +28,12 @@ qarniya prepare outputs/runs/<run>
 qarniya serve outputs/runs/<run> --port 8765
 ```
 Puis ouvrir http://127.0.0.1:8765 (documentation de l'API : `/docs`). Détails : [docs/07_api_interface.md](docs/07_api_interface.md).
+
+## Avec Docker (aucune installation Python)
+```powershell
+$env:QARNIYA_RUN = "./outputs/runs/<run>"; docker compose up --build
+```
+Conteneur durci (non-root, lecture seule, sans privilèges). Détails : [docs/08_rapport_docker.md](docs/08_rapport_docker.md).
 
 ## Avant chaque push : une seule commande
 ```powershell
@@ -64,6 +70,7 @@ prototype/      premier prototype du 18/11 (référence, non maintenu)
 - [Résultats sur le jeu de test](docs/05_evaluation.md)
 - [Explicabilité et garde-fous](docs/06_explicabilite_garde_fous.md)
 - [API et interface du médecin](docs/07_api_interface.md)
+- [Rapport PDF et Docker](docs/08_rapport_docker.md)
 - [Questions du jury](docs/jury_questions.md)
 - [Sécurité et données](SECURITY.md)
 

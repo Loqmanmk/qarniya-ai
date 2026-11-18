@@ -14,6 +14,8 @@
 | Configuration malveillante ou erronée | YAML lu avec `yaml.safe_load` + validation stricte pydantic (clé inconnue = erreur) |
 | Secrets dans le code | hook `detect-private-key` + règles de sécurité Bandit (ruff `S`) à chaque commit |
 | Vulnérabilités des dépendances | `pip-audit` en CI + Dependabot chaque semaine |
+| Fuite de données par le conteneur | utilisateur non-root, système de fichiers en lecture seule, `/tmp` en mémoire, aucun privilège, port sur 127.0.0.1 |
+| Identité dans le rapport PDF | référence anonyme seulement (lettres, chiffres, `-`, `_`), noms et dates refusés |
 | CI compromise | permissions en lecture seule, actions épinglées par SHA, identifiants Git non conservés |
 
 ## Points connus (18/11/2026)

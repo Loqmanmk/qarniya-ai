@@ -265,8 +265,11 @@ def serve(
         typer.secho(f"Erreur : {exc}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from exc
     if host not in ("127.0.0.1", "localhost"):
-        typer.secho("⚠ Ouvert au réseau : aucune authentification. Réseau de confiance seulement.",
-                    fg=typer.colors.YELLOW)  # fmt: skip
+        typer.secho(
+            f"⚠ Écoute sur {host} sans authentification. Hors Docker : réseau de confiance "
+            "seulement. Dans Docker : publiez le port sur 127.0.0.1 (-p 127.0.0.1:8765:8000).",
+            fg=typer.colors.YELLOW,
+        )
     typer.secho(f"Qarniya AI : http://{host}:{port}  (documentation : /docs)", bold=True)
     uvicorn.run(create_app(service), host=host, port=port, log_level="warning")
 

@@ -19,15 +19,14 @@ dependencies = [
     "scikit-learn>=1.3",
     "torch>=2.2",
     "torchvision>=0.17",
-    "opencv-python>=4.8",
     "matplotlib>=3.8",
     "tqdm>=4.66",
-    "tensorboard>=2.15",
     "typer>=0.12",
 ]
 
 [project.optional-dependencies]
 serve = ["fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9", "httpx>=0.27"]
+train = ["tensorboard>=2.15"]  # courbes d'entraînement (facultatif)
 # Outils de qualité en version EXACTE : votre PC, pre-commit et la CI vérifient la même chose.
 # (Les mettre à jour volontairement, ensemble, quand Dependabot le propose.)
 dev = [

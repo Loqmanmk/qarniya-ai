@@ -37,6 +37,7 @@ from qarniya.services import (
     ProgressionService,
     validate_clinical_values,
 )
+from qarniya.services.report import build_report_pdf, validate_reference
 
 STATIC_DIR = Path(__file__).parent / "static"
 ALLOWED_FORMATS = {"PNG", "JPEG"}
@@ -105,6 +106,36 @@ def create_app(analysis: AnalysisService) -> FastAPI:
             exam = _exam_from_uploads(Path(tmp), "examen", eye, uploads, clinical)
             with lock:
                 return _to_out(analysis.analyse(exam))
+
+    @app.post("/api/reports", response_class=Response)
+    def report_pdf(
+        eye: Annotated[EyeSide, Form()],
+        axial: Upload,
+        anterior: Upload,
+        posterior: Upload,
+        pachymetry: Upload,
+        kmax: Annotated[float | None, Form()] = None,
+        pachymetry_thinnest: Annotated[float | None, Form()] = None,
+        reference: Annotated[str | None, Form(max_length=64)] = None,
+    ) -> Response:
+        """Même analyse, rendue sous forme de rapport PDF d'une page (rien n'est conservé)."""
+        clinical = _clinical_values(kmax, pachymetry_thinnest)
+        try:
+            reference = validate_reference(reference)
+        except QarniyaError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        uploads = dict(zip(MapType, (axial, anterior, posterior, pachymetry), strict=True))
+        model_name = str(analysis.predictor.loaded.metadata.get("experiment", "inconnu"))
+        with tempfile.TemporaryDirectory(prefix="qarniya_") as tmp:
+            exam = _exam_from_uploads(Path(tmp), "examen", eye, uploads, clinical)
+            with lock:
+                pdf = build_report_pdf(analysis.analyse(exam), model_name, reference)
+        name = f"qarniya_{reference or 'rapport'}_{eye.value}.pdf"
+        return Response(
+            content=pdf,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{name}"'},
+        )
 
     @app.post("/api/progressions")
     def compare_exams(

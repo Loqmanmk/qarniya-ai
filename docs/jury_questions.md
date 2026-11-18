@@ -284,3 +284,25 @@
 **Q53. Que se passe-t-il si on compare deux examens dont l'un est douteux ?**
 > La comparaison est refusée : « au moins un des deux examens n'est pas fiable ». Mieux vaut pas de réponse qu'une
 > fausse conclusion sur la progression, qui déciderait d'un traitement.
+
+---
+
+## Étape 8 — Rapport PDF et Docker
+
+**Q54. Le médecin peut-il garder une trace de l'analyse ?**
+> Oui : un rapport PDF d'une page, avec le niveau, l'explication, les 4 cartes de chaleur, l'avis des chiffres et une
+> zone « Avis de l'ophtalmologue / Signature ». Le médecin signe : c'est lui qui décide. Le rapport ne contient aucune
+> identité, seulement une référence anonyme ; un nom est refusé.
+
+**Q55. Comment installe-t-on votre outil dans un cabinet ?**
+> Une commande : `docker compose up`. L'image contient tout (Python, PyTorch CPU, notre code) ; il suffit d'y monter le
+> dossier du modèle. Pas besoin de carte graphique : une analyse prend environ une seconde sur un PC ordinaire.
+
+**Q56. Votre conteneur est-il sécurisé ?**
+> Il tourne sans droits administrateur, avec un système de fichiers en lecture seule ; les images analysées restent en
+> mémoire et disparaissent. Aucun privilège Linux, port accessible depuis le PC seulement. Nous l'avons vérifié :
+> `docker diff` ne montre aucun fichier écrit après une analyse. La CI construit l'image à chaque modification.
+
+**Q57. Pourquoi le modèle n'est-il pas dans l'image Docker ?**
+> Pour pouvoir changer de modèle (par exemple après ré-entraînement sur les données du médecin) sans reconstruire
+> l'image, et pour qu'aucune donnée ne se retrouve dans une image qui pourrait être partagée.

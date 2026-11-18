@@ -1,0 +1,8 @@
+# Liste blanche : on n'envoie à Docker QUE ce qui sert à construire l'image.
+# (Jamais de données patients, de modèles, d'environnement local ou de secrets dans l'image.)
+*
+!pyproject.toml
+!README.md
+!src/
+**/__pycache__
+**/*.egg-info

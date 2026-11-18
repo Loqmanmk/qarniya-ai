@@ -180,3 +180,12 @@ button.primary:disabled { opacity: .5; cursor: progress; }
 /* score non fiable : grisé, pour ne pas attirer l'œil sur un chiffre douteux */
 .score.unreliable .value, .score.unreliable .level { color: var(--text-2); opacity: 0.55; }
 .score.unreliable .value { text-decoration: line-through; text-decoration-thickness: 2px; }
+button.secondary {
+  background: transparent; color: var(--accent); border: 2px solid var(--accent); border-radius: 10px;
+  padding: 8px 18px; font: inherit; font-weight: 600; cursor: pointer;
+}
+button.secondary:disabled { opacity: .5; cursor: progress; }
+input[type="text"] {
+  font: inherit; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--text); width: 220px;
+}

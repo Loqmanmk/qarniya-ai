@@ -1,0 +1,20 @@
+# Lancement en une commande, avec un conteneur durci.
+#
+#   PowerShell :  $env:QARNIYA_RUN = "./outputs/runs/20261118_195456_cornorb_resnet18"
+#                 docker compose up --build
+#   → http://127.0.0.1:8765
+services:
+  qarniya:
+    build: .
+    image: qarniya-ai:latest
+    ports:
+      - "127.0.0.1:8765:8000"   # accessible depuis ce PC seulement
+    volumes:
+      - "${QARNIYA_RUN:?Définissez QARNIYA_RUN = dossier du modèle (outputs/runs/...)}:/model:ro"
+    read_only: true              # système de fichiers en lecture seule…
+    tmpfs:
+      - /tmp                     # … sauf /tmp, en mémoire : les images analysées n'atteignent jamais le disque
+    cap_drop: [ALL]              # aucun privilège Linux
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
