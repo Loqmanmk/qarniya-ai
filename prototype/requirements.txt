@@ -1,0 +1,11 @@
+# Installer PyTorch d'abord (version GPU CUDA 12.4) :
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+# Puis le reste :
+#   pip install -r requirements.txt
+pandas
+scikit-learn
+pillow
+matplotlib
+opencv-python
+tqdm
+gradio

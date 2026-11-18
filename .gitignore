@@ -1,0 +1,31 @@
+# Environnements
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Données et résultats : jamais dans Git (taille + données de santé)
+data/
+outputs/
+*.pt
+*.pth
+*.zip
+mlruns/
+
+# Outils
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Éditeurs / système
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.env

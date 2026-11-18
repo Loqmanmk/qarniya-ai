@@ -1,0 +1,28 @@
+# Vérifications lancées automatiquement à chaque `git commit`.
+# Installation (une fois) : pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files   # bloque l'ajout d'images / modèles lourds
+        args: ["--maxkb=1000"]
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff            # lint + corrections automatiques
+        args: ["--fix"]
+      - id: ruff-format     # formatage
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy            # vérification des types (environnement isolé, config lue dans pyproject.toml)
+        args: []
+        pass_filenames: false
+        additional_dependencies: ["typer>=0.12", "pydantic>=2.5", "types-PyYAML", "pytest>=8.0"]
