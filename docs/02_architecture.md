@@ -1,27 +1,50 @@
-# Étape 2 — Architecture du projet
+# Architecture du projet
+
+> Rédigé à l'étape 2, **mis à jour à l'étape 11** (état final du hackathon).
 
 ## 1. Vue d'ensemble : une architecture en couches
 
 ```
-            ┌──────────────────────────────────────────────┐
- Interfaces │  app/ (interface web)   api/ (FastAPI)   cli  │  ← comment on parle au logiciel
-            └───────────────────────┬──────────────────────┘
+ Déploiement   Docker (non-root, lecture seule) ─── qarniya serve ─── 127.0.0.1:8765
+                                    │
+            ┌───────────────────────┴──────────────────────────────────────┐
+ Interfaces │ api/static/ (page web du médecin)   api/ (FastAPI, /docs)    │  ← comment on parle
+            │ cli.py : data inspect · train · evaluate · prepare · analyse · serve │     au logiciel
+            └───────────────────────┬──────────────────────────────────────┘
                                     ▼
- Services   ┌──────────────────────────────────────────────┐
-            │ analyser un œil · comparer 2 examens ·        │  ← les cas d'usage (user stories)
-            │ dépister un lot · générer un rapport          │
-            └───────┬───────────────┬──────────────┬───────┘
-                    ▼               ▼              ▼
- Technique  ┌────────────┐ ┌──────────────┐ ┌────────────────┐
-            │ data/      │ │ models/      │ │ explainability/│  ← les « détails » remplaçables
-            │ adapters/  │ │ training/    │ │ evaluation/    │
-            └─────┬──────┘ └──────┬───────┘ └───────┬────────┘
-                  └───────────────┼─────────────────┘
-                                  ▼
- Domaine    ┌──────────────────────────────────────────────┐
-            │ CornealExam · CornealMaps · RiskAssessment ·  │  ← le cœur métier, pur Python
-            │ RiskThresholds · ProgressionAssessment        │
-            └──────────────────────────────────────────────┘
+ Services   ┌──────────────────────────────────────────────────────────────┐
+            │ analysis.py   analyser un œil (qualité → score + chaleur → nouveauté) │  ← les cas d'usage
+            │ progression.py comparer 2 examens · clinical.py avis des chiffres     │    (user stories)
+            │ report.py     rapport PDF · triage_order : dépister un lot            │
+            └───────┬──────────────────┬───────────────────┬───────────────┘
+                    ▼                  ▼                   ▼
+ Technique  ┌────────────────┐ ┌──────────────────┐ ┌──────────────────────┐
+            │ data/          │ │ models/          │ │ explainability/      │  ← les « détails »
+            │  adapters/     │ │  multimap, registry│ │  gradcam, rendering  │    remplaçables
+            │  splitting     │ │  predictor       │ │ evaluation/          │
+            │  validation    │ │  novelty, checkpoint│ │  metrics, thresholds,│
+            │                │ │ training/ (callbacks)│ │  bootstrap, baseline │
+            └───────┬────────┘ └────────┬─────────┘ └──────────┬───────────┘
+                    └───────────────────┼──────────────────────┘
+                                        ▼
+ Domaine    ┌──────────────────────────────────────────────────────────────┐
+            │ CornealExam · CornealMaps · RiskAssessment · RiskThresholds · │  ← le cœur métier,
+            │ ProgressionAssessment · OpinionComparison                      │    pur Python
+            └──────────────────────────────────────────────────────────────┘
+```
+
+### Le trajet d'une analyse (de la page web au résultat)
+```
+page web ──POST /api/analyses──► api/app.py : vérifie et ré-encode les 4 images (dossier temporaire)
+   ▲                                   │
+   │                                   ▼
+   │                  services/analysis.py
+   │                    ① data/validation.py   qualité ── refus ──► « Analyse impossible »
+   │                    ② models/predictor.py  + explainability/gradcam.py → score, chaleur
+   │                    ③ models/novelty.py    image inhabituelle ? → « score non fiable »
+   │                    ④ services/clinical.py avis des chiffres → domain OpinionComparison
+   │                                   │
+   └──────── JSON (score, niveau, 4 chaleurs, alertes) ◄─┘   dossier temporaire supprimé
 ```
 
 **Règle des dépendances :** les flèches vont toujours **vers le domaine**.
@@ -81,3 +104,13 @@ l'installerait, et évite les imports « qui marchent par hasard ».
 | 005 | FastAPI pour l'API | Documentation Swagger automatique, validation par types | Flask (moins de validation intégrée) |
 | 006 | Données et modèles hors de Git | Taille + données de santé (loi 09-08) | Tout versionner |
 | 007 | Prototype conservé dans `prototype/` | Démo de secours pendant la refonte | Le supprimer |
+| 008 | Callbacks d'entraînement (checkpoint, CSV, TensorBoard) | Ajouter un suivi (MLflow…) sans toucher au `Trainer` | Tout coder dans la boucle |
+| 009 | Préparation des images enregistrée DANS le modèle | Impossible d'utiliser le modèle avec une autre préparation | Configuration séparée, risque d'écart |
+| 010 | Test évalué une seule fois (`--force` sinon), seuil choisi sur la validation | Pas de réglage involontaire sur le test | Ajuster le seuil sur le test |
+| 011 | Détecteur d'images inhabituelles par plus proches voisins (empreintes) | Simple, sans ré-entraînement, mesurable (42/43 en simulation) | Faire confiance au score seul |
+| 012 | Fusion images + chiffres **non** adoptée ; désaccord → « à surveiller » | La fusion manque un KC de plus au seuil prévu ; le désaccord est une information | Moyenne comme score principal |
+| 013 | Interface en HTML/CSS/JS sans framework, servie par FastAPI | Aucune compilation, CSP stricte possible, une seule commande | React/Gradio (dépendances, surface d'attaque) |
+| 014 | Rapport PDF dessiné avec matplotlib | Aucune nouvelle dépendance | reportlab / WeasyPrint |
+| 015 | Docker PyTorch CPU, modèle monté en lecture seule | Tourne partout ; pas de données dans l'image ; changer de modèle sans reconstruire | Modèle copié dans l'image |
+| 016 | OpenCV retiré, TensorBoard en extra `train` | Moins de dépendances et de surface d'attaque | Garder l'héritage du prototype |
+| 017 | Le dossier `app/` prévu à l'étape 2 est supprimé : l'interface vit dans `api/static/` | Livrée avec le paquet Python et l'image Docker | Dossier séparé à installer à part |

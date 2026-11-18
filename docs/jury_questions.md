@@ -306,3 +306,18 @@
 **Q57. Pourquoi le modèle n'est-il pas dans l'image Docker ?**
 > Pour pouvoir changer de modèle (par exemple après ré-entraînement sur les données du médecin) sans reconstruire
 > l'image, et pour qu'aucune donnée ne se retrouve dans une image qui pourrait être partagée.
+
+---
+
+## Étape 11 — Documentation
+
+**Q58. Qu'est-ce qu'une « fiche du modèle » (model card) ?**
+> Un document standard en IA (Mitchell et al., 2019) qui dit honnêtement à quoi sert un modèle et à quoi il ne sert
+> pas, sur quelles données il a appris, ses résultats avec leurs fourchettes, et surtout ses **limites**. La nôtre en
+> liste huit, par exemple : un seul appareil, pas de formes suspectes, calibration non mesurée. C'est ce qu'un médecin
+> ou une autorité de santé lirait en premier.
+
+**Q59. Quelle est la limite la plus importante de votre modèle ?**
+> L'absence de formes débutantes (« suspectes ») dans les données : ce sont justement les cas les plus utiles au
+> dépistage. 77 % des kératocônes de notre test sont déjà nets (Kmax ≥ 48 D). Nos résultats sont donc probablement
+> optimistes pour un vrai dépistage ; c'est pourquoi la validation avec l'ophtalmologue d'Oujda est notre priorité.
