@@ -2,6 +2,7 @@
 
 from qarniya.models.checkpoint import LoadedModel, load_checkpoint, save_checkpoint
 from qarniya.models.multimap import BACKBONES, MultiMapClassifier
+from qarniya.models.predictor import Predictor
 from qarniya.models.preprocessing import PreprocessingSpec, Preprocessor
 from qarniya.models.registry import ModelSpec, available_models, build_model, register_model
 
@@ -10,6 +11,7 @@ __all__ = [
     "LoadedModel",
     "ModelSpec",
     "MultiMapClassifier",
+    "Predictor",
     "PreprocessingSpec",
     "Preprocessor",
     "available_models",

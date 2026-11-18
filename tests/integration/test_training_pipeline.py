@@ -4,7 +4,6 @@ Mini-dataset synthétique, CPU, petites images : quelques secondes, tourne aussi
 """
 
 import json
-from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -12,45 +11,8 @@ import torch
 
 from qarniya.models import Preprocessor, load_checkpoint
 from qarniya.training import ExperimentConfig, run_experiment
-from tests.conftest import write_yaml
 
 pytestmark = pytest.mark.integration
-
-
-def synthetic_rows() -> list[dict[str, str]]:
-    rows = []
-    for i in range(12):
-        split, fold = ("train", "1") if i < 4 else ("train", "2")
-        if i >= 10:
-            split, fold = "test", ""
-        for eye in ("OD", "OS"):
-            rows.append(
-                {"patient_code": f"P{i:02d}", "eye": eye, "label": str(i % 2),
-                 "split_80_20": split, "fold": fold}
-            )  # fmt: skip
-    return rows
-
-
-@pytest.fixture
-def experiment_yaml(cornorb_like: Callable[..., Path], tmp_path: Path) -> Path:
-    data_yaml = cornorb_like(synthetic_rows())
-    return write_yaml(
-        tmp_path / "experiment.yaml",
-        {
-            "name": "test_run",
-            "data_config": str(data_yaml),
-            "model": {"backbone": "resnet18", "pretrained": False, "hidden_dim": 16},
-            "preprocessing": {"image_size": 64},
-            "training": {
-                "epochs": 2,
-                "batch_size": 4,
-                "num_workers": 0,
-                "device": "cpu",
-                "mixed_precision": False,
-            },
-            "output_dir": str(tmp_path / "runs"),
-        },
-    )
 
 
 def test_experiment_produces_a_complete_reproducible_run(experiment_yaml: Path) -> None:

@@ -54,6 +54,7 @@ prototype/      premier prototype du 18/11 (référence, non maintenu)
 ## Documentation
 - [Cadrage du projet](docs/01_cadrage.md)
 - [Architecture](docs/02_architecture.md)
+- [Résultats sur le jeu de test](docs/05_evaluation.md)
 - [Questions du jury](docs/jury_questions.md)
 - [Sécurité et données](SECURITY.md)
 

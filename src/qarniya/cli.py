@@ -101,5 +101,33 @@ def train(
     typer.echo(f"  Modèle      {result.checkpoint}")
 
 
+@app.command()
+def evaluate(
+    run_dir: Path = typer.Argument(..., help="Dossier de l'entraînement (outputs/runs/...)"),  # noqa: B008
+    target_sensitivity: float = typer.Option(0.95, help="Sensibilité visée sur la validation"),
+    bootstrap: int = typer.Option(2000, help="Nombre de tirages pour les fourchettes"),
+    force: bool = typer.Option(False, "--force", help="Ré-évaluer un test déjà évalué"),
+) -> None:
+    """Évalue un modèle entraîné sur le jeu de TEST (une seule fois)."""
+    from qarniya.evaluation.runner import evaluate_run  # import tardif : torch est lourd
+
+    try:
+        result = evaluate_run(run_dir, target_sensitivity, bootstrap, force)
+    except (ConfigError, QarniyaError) as exc:
+        typer.secho(f"Erreur : {exc}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from exc
+    typer.secho(f"Jeu de test : {result.n_test} yeux", bold=True)
+    for evaluation in filter(None, (result.model, result.baseline)):
+        t, ci = evaluation.test, evaluation.confidence
+        sens = ci["sensitivity"]
+        typer.echo(f"  {evaluation.name}")
+        typer.echo(
+            f"    AUC {t.auc:.3f} [{ci['auc'].low:.3f}-{ci['auc'].high:.3f}]  "
+            f"sensibilité {t.sensitivity:.1%} [{sens.low:.1%}-{sens.high:.1%}]  "
+            f"spécificité {t.specificity:.1%}  KC manqués {t.fn}  fausses alertes {t.fp}"
+        )
+    typer.echo(f"  Rapport : {result.output_dir / 'report.md'}")
+
+
 if __name__ == "__main__":
     app()

@@ -176,3 +176,43 @@
 > Pour que le PC du développeur, pre-commit et la CI vérifient exactement la même chose. Nous l'avons appris à nos
 > dépens : la CI installait une version plus récente de PyTorch dont les types diffèrent, et rejetait un code accepté
 > sur notre PC. Aujourd'hui : versions identiques partout, et une commande `python scripts/check.py` qui reproduit la CI.
+
+---
+
+## Étape 5 — Les résultats
+
+**Q35. Quels sont vos résultats ?**
+> Sur 267 yeux jamais vus (143 patients) : **95,6 % des kératocônes détectés** (fourchette 91–99 %), **99,4 % de
+> spécificité**, soit 4 kératocônes manqués sur 91 et **une seule fausse alerte sur 176** yeux sains. AUC 0,996.
+
+**Q36. 99 %, ce n'est pas trop beau pour être vrai ?**
+> C'est une bonne question. Trois raisons de rester prudents : 1) CornOrb contient surtout des cas nets (sains contre
+> kératocônes avérés), pas de formes débutantes ; 2) un seul appareil, une seule population ; 3) 267 yeux, d'où nos
+> fourchettes de confiance. Mais le protocole est propre : seuil choisi sur la validation, test jamais touché, découpage
+> par patient. La vraie validation viendra des cas de notre ophtalmologue.
+
+**Q37. Faites-vous mieux que les indices de l'appareil ?**
+> Nous faisons au moins aussi bien que les chiffres (Kmax, épaisseur…) avec **4 fois moins de fausses alertes**. Mais les
+> fourchettes se chevauchent : nous ne pouvons pas dire que c'est *statistiquement* meilleur sur 267 yeux. Et surtout,
+> leurs erreurs sont **complémentaires** : 3 des 4 kératocônes que nous manquons sont attrapés par les chiffres.
+> Notre prochaine étape est donc de **combiner** les deux.
+
+**Q38. Comment avez-vous choisi le seuil ?**
+> Sur la validation, jamais sur le test : le seuil le plus prudent qui garantit 95 % de sensibilité, placé au milieu
+> de l'écart entre deux scores pour être robuste. Puis appliqué tel quel au test. Il est configurable : un centre
+> LASIK pourrait viser 99 %.
+
+**Q39. Qu'est-ce qu'un intervalle de confiance et pourquoi « par patient » ?**
+> C'est la fourchette dans laquelle se trouve probablement la vraie performance. Nous la calculons en rejouant
+> l'évaluation sur 2 000 tirages au hasard du jeu de test. Nous tirons des **patients** (avec leurs 2 yeux) car leurs
+> deux yeux se ressemblent : les tirer séparément donnerait une fourchette faussement étroite (un test le démontre).
+
+**Q40. Parlez-nous d'une erreur de votre modèle.**
+> Notre seule fausse alerte, 66NY2 OS, est étiquetée « normale » mais sa carte montre une zone inférieure plus bombée
+> que la supérieure, ce qui peut évoquer une forme débutante. Le modèle la signale à 99,96 %. Ce n'est peut-être pas une
+> erreur mais un cas limite : nous le soumettrons à notre ophtalmologue, sans conclure nous-mêmes. C'est exactement le
+> rôle d'un outil d'aide au dépistage.
+
+**Q41. Pourquoi n'évaluez-vous le test qu'une fois ?**
+> Si l'on regarde le test, qu'on modifie le modèle, puis qu'on re-teste, on finit par ajuster le modèle au test et le
+> score devient optimiste. Notre outil refuse une 2e évaluation sauf avec `--force` explicite.
