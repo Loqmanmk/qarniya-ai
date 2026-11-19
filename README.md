@@ -100,6 +100,8 @@ prototype/         premier prototype (référence, non maintenu)
 | [07 · Application](docs/07_api_interface.md) | API, interface, sécurité |
 | [08 · PDF et Docker](docs/08_rapport_docker.md) | rapport, déploiement durci |
 | [**Fiche du modèle**](docs/MODEL_CARD.md) | usage prévu, données, performances, **limites** |
+| [09 · Pitch et vidéo](docs/09_pitch_video.md) | texte des 3 minutes, scénario vidéo, kit de démo |
+| [Questions du jury](docs/jury_questions.md) | 59 questions probables et leurs réponses |
 | [Sécurité](SECURITY.md) | données de santé, mesures, vulnérabilités connues |
 
 ## Données

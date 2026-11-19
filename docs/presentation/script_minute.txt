@@ -1,0 +1,14 @@
+## 1 | 0:00 | cover
+Imaginez Yassine, dix-neuf ans. Sa vue baisse, ses lunettes ne suffisent plus. Le diagnostic tombe : kératocône avancé. Il aurait pu être freiné, s’il avait été détecté deux ans plus tôt. Nous sommes l’équipe NeuroLens, et voici Qarniya AI.
+## 2 | 0:18 | probleme
+Le kératocône déforme la cornée des jeunes. Dans notre région, les études montrent jusqu’à près de cinq pour cent de la population touchée. Un traitement, le cross-linking, freine la maladie, mais il ne répare pas : il faut agir tôt. Or les formes débutantes sont discrètes, et lire ces cartes demande un expert. Avant un LASIK, un cas non vu peut coûter très cher.
+## 3 | 0:46 | solution
+Qarniya AI lit les quatre cartes de topographie d’un œil. En quelques secondes, il donne un niveau de risque, et surtout il explique : en orange, ce qui a fait monter le score, et le poids de chaque carte. Le médecin peut ajouter deux chiffres qu’il connaît déjà. Et si l’image est douteuse, l’outil sait dire : je ne sais pas.
+## 4 | 1:12 | filet
+Voici un vrai cas de nos données de test, un kératocône. Les images seules se trompent : zéro pour cent. Le médecin saisit le Kmax et l’épaisseur. Les chiffres disent quatre-vingt-quatre pour cent. L’outil voit le désaccord : l’œil n’est plus classé faible, mais à surveiller. Le médecin vérifie, et signe le rapport. Pour nous, une IA médicale ne doit pas avoir toujours raison : elle doit savoir quand elle doute.
+## 5 | 1:55 | resultats
+Nous l’avons testé sur deux cent soixante-sept yeux jamais vus, avec un protocole strict. Il détecte quatre-vingt-quinze virgule six pour cent des kératocônes, avec une seule fausse alerte sur cent soixante-seize yeux sains. Et nous publions nos limites : un seul appareil, pas encore de formes débutantes.
+## 6 | 2:18 | confiance
+Derrière la démo, un vrai logiciel : changer d’appareil tient dans un fichier de configuration, cent trente-huit tests automatiques, et un déploiement Docker sécurisé qui ne garde aucune image.
+## 7 | 2:38 | impact
+Nos premiers utilisateurs : les centres LASIK et le dépistage des jeunes. Prochaine étape : valider l’outil avec un ophtalmologue d’Oujda. Qarniya AI : voir le kératocône avant qu’il ne vole la vue. Merci.
